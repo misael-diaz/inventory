@@ -216,24 +216,6 @@ void gsize (void)
 	char prompt[] = "Input the shoe size:";
 	validData("gsize", prompt, &_size_);
 }
-/*
-{
-	printf("Input the shoe size:");
-	ssize_t const n = scanf("%d", &_size_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gsize: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gsize: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-}
-*/
 
 void gavail (void)
 {
@@ -258,48 +240,12 @@ void gcost (void)
 	char prompt[] = "Input the shoe cost:";
 	validData("gcost", prompt, &_cost_);
 }
-/*
-{
-	printf("Input the shoe cost:");
-	ssize_t const n = scanf("%d", &_cost_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gcost: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gcost: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-}
-*/
 
 void gsale (void)
 {
 	char prompt[] = "Input the shoe sale value:";
 	validData("gsale", prompt, &_sale_);
 }
-/*
-{
-	printf("Input the shoe sale value:");
-	ssize_t const n = scanf("%d", &_sale_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gsale: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gsale: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-}
-*/
 
 void header (void)
 {
