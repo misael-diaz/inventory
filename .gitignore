@@ -1,0 +1,11 @@
+*.o
+*.obj
+*.bin
+*.swp
+*.swo
+*.txt
+*.log
+*.err
+*.pdf
+*.json
+*TODO*
