@@ -92,7 +92,7 @@ static void skipWhiteSpace (char **txt)
 static bool is_numeric (char **text)
 {
 	char *start = *text;
-	if (**text == '\n') {
+	if (!**text || **text == '\n') {
 		return false;
 	}
 
