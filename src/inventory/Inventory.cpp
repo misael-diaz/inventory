@@ -2,15 +2,16 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
+#include <cctype>
 
 static size_t _sz_ = 0;		// size of temporary placeholder
 static char *_temp_[] = {NULL};	// temporary placeholder for fetching the entire line
 static char *_code_[] = {NULL};	// shoe reference code could be alpha numeric
 static char *_info_[] = {NULL};	// shoe information might be a phrase
-static int _size_ = 0;		// shoe size
+static double _size_ = 0;	// shoe size
 static char _avail_ = 0;	// shoe availability (Y/N)
-static int _cost_ = 0;		// shoe cost
-static int _sale_ = 0;		// shoe sale value
+static double _cost_ = 0;	// shoe cost
+static double _sale_ = 0;	// shoe sale value
 
 // headers:
 void head(void);
@@ -63,6 +64,124 @@ int main ()
 	return EXIT_SUCCESS;
 }
 
+static bool isValidSymbol (char const c)
+{
+	if (c == '+' || c == '-' || c == ',' || c == '.' || c == 'e' || c == 'E') {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static bool isNumber (char const c)
+{
+	if (c >= '0' && c <= '9') {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static void skipWhiteSpace (char **txt)
+{
+	while (**txt && **txt <= ' ') {
+		++*txt;
+	}
+}
+
+static bool is_numeric (char **text)
+{
+	char *start = *text;
+	if (**text == '\n') {
+		return false;
+	}
+
+	skipWhiteSpace(text);
+	char *iter = *text;
+	bool space = false;
+	while (*iter && *iter != '\n') {
+
+		if (*iter <= ' ' && !space) {
+			space = true;
+			++iter;
+			continue;
+		}
+
+		// ignores trailing whitespace
+		if (*iter <= ' ' && space) {
+			++iter;
+			continue;
+		}
+
+		if (*iter > ' ' && space) {
+			*text = start;
+			return false;
+		}
+
+		if (!isValidSymbol(*iter) && !isNumber(*iter)) {
+			*text = start;
+			return false;
+		}
+
+		++iter;
+	}
+
+	*text = start;
+	return true;
+}
+
+static bool toNumber (char **text, double *number)
+{
+	bool invalid = true;
+	errno = 0;
+	char *endptr[] = {NULL};
+	*number = strtod(*text, endptr);
+	if (errno == ERANGE) {
+		invalid = true;
+	} else if (!isspace(**endptr)) {
+		invalid = true;
+	} else {
+		invalid = false;
+	}
+
+	return invalid;
+}
+
+static void validData (const char *fname, const char *prompt, double *number)
+{
+	*number = 0;
+	printf("%s", prompt);
+	ssize_t chars = 0;
+	bool invalid = true;
+	do {
+		errno = 0;
+		chars = getline(_temp_, &_sz_, stdin);
+		if (chars == -1) {	// caters EOF
+			if (errno) {
+				fprintf(stderr, "%s: %s\n", fname, strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			clearerr(stdin);
+			printf("\nplease input valid data\n");
+			printf("%s", prompt);
+		} else {
+
+			if (!is_numeric(_temp_)) {
+				invalid = true;
+			} else {
+				invalid = toNumber(_temp_, number);
+			}
+
+			if (invalid) {
+				printf("please input valid data\n");
+				printf("%s", prompt);
+			}
+		}
+
+	} while (chars == -1 || invalid);
+}
+
 void head (void)
 {
 	printf("SHOE SALES INVENTORY PROGRAM\n");
@@ -94,74 +213,77 @@ void ginfo (void)
 
 void gsize (void)
 {
-	printf("Input the shoe size:");
-	ssize_t const n = scanf("%d", &_size_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gsize: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gsize: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	char prompt[] = "Input the shoe size:";
+	validData("gsize", prompt, &_size_);
 }
 
 void gavail (void)
 {
-	printf("Input the letter N/Y if the shoe is (un)available for sale:");
-	ssize_t const n = scanf("%c", &_avail_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gavail: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+	ssize_t chars = -1;
+	bool invalid = false;
+	char prompt[] = "Input the letter N/Y if the shoe is (un)available for sale:";
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		_avail_ = 0;
+		ssize_t const n = scanf("%c", &_avail_);
+		if (n != 1) {
+			if (errno) {
+				cleanup();
+				fprintf(stderr, "gavail: %s\n", strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			clearerr(stdin);
+		}
+
+		errno = 0;
+		chars = getline(_temp_, &_sz_, stdin);
+		if (chars == -1) {
+			if (errno) {
+				cleanup();
+				fprintf(stderr, "gavail: %s\n", strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			clearerr(stdin);
+		}
+
+		char const c = _avail_ ;
+		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
+			invalid = false;
+		} else {
+			invalid = true;
+		}
+
+		if (invalid) {
+			if (chars == -1) {
+				printf("\nplease input N/Y\n");
+			} else {
+				printf("please input N/Y\n");
+			}
+			printf("%s", prompt);
+		}
+
+	} while (chars == -1 || invalid);
+
+	if (_avail_ == 'y') {
+		_avail_ = 'Y';
 	}
 
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gavail: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+	if (_avail_ == 'n') {
+		_avail_ = 'N';
 	}
 }
 
 void gcost (void)
 {
-	printf("Input the shoe cost:");
-	ssize_t const n = scanf("%d", &_cost_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gcost: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gcost: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	char prompt[] = "Input the shoe cost:";
+	validData("gcost", prompt, &_cost_);
 }
 
 void gsale (void)
 {
-	printf("Input the shoe sale value:");
-	ssize_t const n = scanf("%d", &_sale_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gsale: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gsale: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	char prompt[] = "Input the shoe sale value:";
+	validData("gsale", prompt, &_sale_);
 }
 
 void header (void)
@@ -181,7 +303,7 @@ void info (void)
 
 void size (void)
 {
-	printf("SIZE: %d\n", _size_);
+	printf("SIZE: %.1f\n", _size_);
 }
 
 void avail (void)
@@ -191,12 +313,12 @@ void avail (void)
 
 void cost (void)
 {
-	printf("COST: %d\n", _cost_);
+	printf("COST: %.2f\n", _cost_);
 }
 
 void sale (void)
 {
-	printf("SALE: %d\n", _sale_);
+	printf("SALE: %.2f\n", _sale_);
 }
 
 void greet (void)
