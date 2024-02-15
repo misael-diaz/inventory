@@ -219,19 +219,58 @@ void gsize (void)
 
 void gavail (void)
 {
-	printf("Input the letter N/Y if the shoe is (un)available for sale:");
-	ssize_t const n = scanf("%c", &_avail_);
-	if (n != 1) {
-		cleanup();
-		fprintf(stderr, "gavail: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+	ssize_t chars = -1;
+	bool invalid = false;
+	char prompt[] = "Input the letter N/Y if the shoe is (un)available for sale:";
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		_avail_ = 0;
+		ssize_t const n = scanf("%c", &_avail_);
+		if (n != 1) {
+			if (errno) {
+				cleanup();
+				fprintf(stderr, "gavail: %s\n", strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			clearerr(stdin);
+		}
+
+		errno = 0;
+		chars = getline(_temp_, &_sz_, stdin);
+		if (chars == -1) {
+			if (errno) {
+				cleanup();
+				fprintf(stderr, "gavail: %s\n", strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			clearerr(stdin);
+		}
+
+		char const c = _avail_ ;
+		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
+			invalid = false;
+		} else {
+			invalid = true;
+		}
+
+		if (invalid) {
+			if (chars == -1) {
+				printf("\nplease input N/Y\n");
+			} else {
+				printf("please input N/Y\n");
+			}
+			printf("%s", prompt);
+		}
+
+	} while (chars == -1 || invalid);
+
+	if (_avail_ == 'y') {
+		_avail_ = 'Y';
 	}
 
-	ssize_t const chars = getline(_temp_, &_sz_, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "gavail: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+	if (_avail_ == 'n') {
+		_avail_ = 'N';
 	}
 }
 
@@ -264,7 +303,7 @@ void info (void)
 
 void size (void)
 {
-	printf("SIZE: %f\n", _size_);
+	printf("SIZE: %.1f\n", _size_);
 }
 
 void avail (void)
@@ -274,12 +313,12 @@ void avail (void)
 
 void cost (void)
 {
-	printf("COST: %f\n", _cost_);
+	printf("COST: %.2f\n", _cost_);
 }
 
 void sale (void)
 {
-	printf("SALE: %f\n", _sale_);
+	printf("SALE: %.2f\n", _sale_);
 }
 
 void greet (void)
