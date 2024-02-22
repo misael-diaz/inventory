@@ -172,7 +172,8 @@ static void callback (bool *invalid)
 static void validData (const char *fname,
 		       const char *prompt,
 		       double *number,
-		       void (*cb)(bool *invalid) = default_callback)
+		       void (*cb)(bool *invalid) = default_callback,
+		       const char *msg = "Please input valid data")
 {
 	*number = 0;
 	printf("%s", prompt);
@@ -188,7 +189,7 @@ static void validData (const char *fname,
 				exit(EXIT_FAILURE);
 			}
 			clearerr(stdin);
-			printf("\nplease input valid data\n");
+			printf("\n%s\n", msg);
 			printf("%s", prompt);
 		} else {
 
@@ -205,7 +206,7 @@ static void validData (const char *fname,
 			cb(&invalid);
 
 			if (invalid) {
-				printf("please input valid data\n");
+				printf("%s\n", msg);
 				printf("%s", prompt);
 			}
 		}
@@ -308,14 +309,16 @@ void gavail (void)
 void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
-	validData("gcost", prompt, &_cost_);
+	char msg[] = "Please input a valid shoe cost value";
+	validData("gcost", prompt, &_cost_, default_callback, msg);
 }
 
 void gsale (void)
 {
 	char prompt[] = "Input the shoe sale value:";
 	void (*cb) (bool*) = callback;
-	validData("gsale", prompt, &_sale_, cb);
+	char msg[] = "Please input a valid shoe sale value";
+	validData("gsale", prompt, &_sale_, cb, msg);
 }
 
 void header (void)
