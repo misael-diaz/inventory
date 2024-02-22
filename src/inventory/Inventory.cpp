@@ -436,7 +436,7 @@ void pause ()
 
 /*
 
-Polygons				February 13, 2024
+Inventory					February 13, 2024
 
 source: Inventory.cpp
 author: @misael-diaz
