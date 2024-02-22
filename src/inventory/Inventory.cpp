@@ -223,13 +223,26 @@ void head (void)
 void gcode (void)
 {
 	size_t n = 0;
-	printf("Input the shoe reference code:");
-	ssize_t const chars = getline(_code_, &n, stdin);
-	if (chars == -1) {
-		fprintf(stderr, "gcode: %s\n", strerror(errno));
-		cleanup();
-		exit(EXIT_FAILURE);
-	}
+	ssize_t chars = 0;
+	const char prompt[] = "Input the shoe reference code:";
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		chars = getline(_code_, &n, stdin);
+		if (chars == -1) {
+
+			if (errno) {
+				fprintf(stderr, "gcode: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+
+			clearerr(stdin);
+			printf("\nPlease input valid data\n");
+			printf("%s", prompt);
+		}
+
+	} while (chars == -1);
 }
 
 void ginfo (void)
