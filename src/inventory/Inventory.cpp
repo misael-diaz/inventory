@@ -281,7 +281,7 @@ void gavail (void)
 	char *text = NULL;
 	ssize_t chars = 0;
 	bool invalid = true;
-	char prompt[] = "Input the letter N/Y if the shoe is (un)available for sale:";
+	char prompt[] = "Input N/Y if the shoe is (un)available for sale:";
 	printf("%s", prompt);
 	do {
 		errno = 0;
