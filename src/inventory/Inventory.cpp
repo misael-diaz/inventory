@@ -163,6 +163,7 @@ static void callback (bool *invalid)
 	}
 
 	if (_sale_ <= _cost_) {
+		printf("The sale value must be greater than the cost\n");
 		*invalid = true;
 	}
 
