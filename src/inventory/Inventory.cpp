@@ -278,6 +278,56 @@ void gsize (void)
 
 void gavail (void)
 {
+	char *text = NULL;
+	ssize_t chars = 0;
+	bool invalid = true;
+	char prompt[] = "Input the letter N/Y if the shoe is (un)available for sale:";
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		chars = getline(_temp_, &_sz_, stdin);
+		if (chars == -1) {
+
+			if (errno) {
+				fprintf(stderr, "ginfo: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+
+			clearerr(stdin);
+			printf("\nPlease input N/Y\n");
+			printf("%s", prompt);
+
+		} else {
+
+			text = *_temp_ ;
+			skipWhiteSpace(&text);
+			char const c = *text ;
+			if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
+				invalid = false;
+			} else {
+				invalid = true;
+			}
+
+			if (invalid) {
+				printf("Please input N/Y\n");
+				printf("%s", prompt);
+			}
+		}
+
+	} while (chars == -1 || invalid);
+
+	_avail_ = *text;
+	if (_avail_ == 'y') {
+		_avail_ = 'Y';
+	}
+
+	if (_avail_ == 'n') {
+		_avail_ = 'N';
+	}
+}
+/*
+{
 	ssize_t chars = -1;
 	bool invalid = false;
 	char prompt[] = "Input the letter N/Y if the shoe is (un)available for sale:";
@@ -332,6 +382,7 @@ void gavail (void)
 		_avail_ = 'N';
 	}
 }
+*/
 
 void gcost (void)
 {
