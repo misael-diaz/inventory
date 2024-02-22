@@ -147,7 +147,32 @@ static bool toNumber (char **text, double *number)
 	return invalid;
 }
 
-static void validData (const char *fname, const char *prompt, double *number)
+static void default_callback (bool *invalid)
+{
+	if (*invalid) {
+		return;
+	}
+
+	return;
+}
+
+static void callback (bool *invalid)
+{
+	if (*invalid) {
+		return;
+	}
+
+	if (_sale_ < _cost_) {
+		*invalid = true;
+	}
+
+	return;
+}
+
+static void validData (const char *fname,
+		       const char *prompt,
+		       double *number,
+		       void (*cb)(bool *invalid) = default_callback)
 {
 	*number = 0;
 	printf("%s", prompt);
@@ -176,6 +201,8 @@ static void validData (const char *fname, const char *prompt, double *number)
 			if (*number < 0) {
 				invalid = true;
 			}
+
+			cb(&invalid);
 
 			if (invalid) {
 				printf("please input valid data\n");
@@ -287,7 +314,8 @@ void gcost (void)
 void gsale (void)
 {
 	char prompt[] = "Input the shoe sale value:";
-	validData("gsale", prompt, &_sale_);
+	void (*cb) (bool*) = callback;
+	validData("gsale", prompt, &_sale_, cb);
 }
 
 void header (void)
