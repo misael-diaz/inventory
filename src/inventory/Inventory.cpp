@@ -162,7 +162,7 @@ static void callback (bool *invalid)
 		return;
 	}
 
-	if (_sale_ < _cost_) {
+	if (_sale_ <= _cost_) {
 		*invalid = true;
 	}
 
