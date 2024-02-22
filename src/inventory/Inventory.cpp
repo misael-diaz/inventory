@@ -147,7 +147,34 @@ static bool toNumber (char **text, double *number)
 	return invalid;
 }
 
-static void validData (const char *fname, const char *prompt, double *number)
+static void default_callback (bool *invalid)
+{
+	if (*invalid) {
+		return;
+	}
+
+	return;
+}
+
+static void callback (bool *invalid)
+{
+	if (*invalid) {
+		return;
+	}
+
+	if (_sale_ <= _cost_) {
+		printf("The sale value must be greater than the cost\n");
+		*invalid = true;
+	}
+
+	return;
+}
+
+static void validData (const char *fname,
+		       const char *prompt,
+		       double *number,
+		       void (*cb)(bool *invalid) = default_callback,
+		       const char *msg = "Please input valid data")
 {
 	*number = 0;
 	printf("%s", prompt);
@@ -163,7 +190,7 @@ static void validData (const char *fname, const char *prompt, double *number)
 				exit(EXIT_FAILURE);
 			}
 			clearerr(stdin);
-			printf("\nplease input valid data\n");
+			printf("\n%s\n", msg);
 			printf("%s", prompt);
 		} else {
 
@@ -173,8 +200,14 @@ static void validData (const char *fname, const char *prompt, double *number)
 				invalid = toNumber(_temp_, number);
 			}
 
+			if (*number < 0) {
+				invalid = true;
+			}
+
+			cb(&invalid);
+
 			if (invalid) {
-				printf("please input valid data\n");
+				printf("%s\n", msg);
 				printf("%s", prompt);
 			}
 		}
@@ -190,25 +223,51 @@ void head (void)
 void gcode (void)
 {
 	size_t n = 0;
-	printf("Input the shoe reference code:");
-	ssize_t const chars = getline(_code_, &n, stdin);
-	if (chars == -1) {
-		fprintf(stderr, "gcode: %s\n", strerror(errno));
-		cleanup();
-		exit(EXIT_FAILURE);
-	}
+	ssize_t chars = 0;
+	const char prompt[] = "Input the shoe reference code:";
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		chars = getline(_code_, &n, stdin);
+		if (chars == -1) {
+
+			if (errno) {
+				fprintf(stderr, "gcode: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+
+			clearerr(stdin);
+			printf("\nPlease input valid data\n");
+			printf("%s", prompt);
+		}
+
+	} while (chars == -1);
 }
 
 void ginfo (void)
 {
 	size_t n = 0;
-	printf("Input the shoe description:");
-	ssize_t const chars = getline(_info_, &n, stdin);
-	if (chars == -1) {
-		cleanup();
-		fprintf(stderr, "ginfo: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	ssize_t chars = 0;
+	const char prompt[] = "Input the shoe description:";
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		chars = getline(_info_, &n, stdin);
+		if (chars == -1) {
+
+			if (errno) {
+				fprintf(stderr, "ginfo: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+
+			clearerr(stdin);
+			printf("\nPlease input valid data\n");
+			printf("%s", prompt);
+		}
+
+	} while (chars == -1);
 }
 
 void gsize (void)
@@ -219,52 +278,46 @@ void gsize (void)
 
 void gavail (void)
 {
-	ssize_t chars = -1;
-	bool invalid = false;
-	char prompt[] = "Input the letter N/Y if the shoe is (un)available for sale:";
+	char *text = NULL;
+	ssize_t chars = 0;
+	bool invalid = true;
+	char prompt[] = "Input N/Y if the shoe is (un)available for sale:";
 	printf("%s", prompt);
 	do {
 		errno = 0;
-		_avail_ = 0;
-		ssize_t const n = scanf("%c", &_avail_);
-		if (n != 1) {
-			if (errno) {
-				cleanup();
-				fprintf(stderr, "gavail: %s\n", strerror(errno));
-				exit(EXIT_FAILURE);
-			}
-			clearerr(stdin);
-		}
-
-		errno = 0;
 		chars = getline(_temp_, &_sz_, stdin);
 		if (chars == -1) {
+
 			if (errno) {
+				fprintf(stderr, "ginfo: %s\n", strerror(errno));
 				cleanup();
-				fprintf(stderr, "gavail: %s\n", strerror(errno));
 				exit(EXIT_FAILURE);
 			}
+
 			clearerr(stdin);
-		}
-
-		char const c = _avail_ ;
-		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
-			invalid = false;
-		} else {
-			invalid = true;
-		}
-
-		if (invalid) {
-			if (chars == -1) {
-				printf("\nplease input N/Y\n");
-			} else {
-				printf("please input N/Y\n");
-			}
+			printf("\nPlease input N/Y\n");
 			printf("%s", prompt);
+
+		} else {
+
+			text = *_temp_ ;
+			skipWhiteSpace(&text);
+			char const c = *text ;
+			if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
+				invalid = false;
+			} else {
+				invalid = true;
+			}
+
+			if (invalid) {
+				printf("Please input N/Y\n");
+				printf("%s", prompt);
+			}
 		}
 
 	} while (chars == -1 || invalid);
 
+	_avail_ = *text;
 	if (_avail_ == 'y') {
 		_avail_ = 'Y';
 	}
@@ -277,13 +330,16 @@ void gavail (void)
 void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
-	validData("gcost", prompt, &_cost_);
+	char msg[] = "Please input a valid shoe cost value";
+	validData("gcost", prompt, &_cost_, default_callback, msg);
 }
 
 void gsale (void)
 {
 	char prompt[] = "Input the shoe sale value:";
-	validData("gsale", prompt, &_sale_);
+	void (*cb) (bool*) = callback;
+	char msg[] = "Please input a valid shoe sale value";
+	validData("gsale", prompt, &_sale_, cb, msg);
 }
 
 void header (void)
@@ -380,7 +436,7 @@ void pause ()
 
 /*
 
-Polygons				February 13, 2024
+Inventory					February 13, 2024
 
 source: Inventory.cpp
 author: @misael-diaz
