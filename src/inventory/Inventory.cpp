@@ -173,6 +173,10 @@ static void validData (const char *fname, const char *prompt, double *number)
 				invalid = toNumber(_temp_, number);
 			}
 
+			if (*number < 0) {
+				invalid = true;
+			}
+
 			if (invalid) {
 				printf("please input valid data\n");
 				printf("%s", prompt);
