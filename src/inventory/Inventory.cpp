@@ -273,6 +273,7 @@ void gcode (void)
 	size_t n = MAX_BUFFER_SIZE;
 	bool invalid = true;
 	ssize_t chars = 0;
+	char *text = NULL;
 	const char prompt[] = "Input the shoe reference code:";
 	printf("%s", prompt);
 	memset(*_code_, 0, MAX_BUFFER_SIZE);
@@ -305,7 +306,15 @@ void gcode (void)
 			n = MAX_BUFFER_SIZE;
 			printf("%s", prompt);
 		} else {
-			invalid = false;
+			text = *_code_ ;
+			skipWhiteSpace(&text);
+			if (!*text || *text == '\n') {
+				invalid = true;
+				printf("Please input a valid reference code\n");
+				printf("%s", prompt);
+			} else {
+				invalid = false;
+			}
 		}
 
 	} while (chars == -1 || invalid);
@@ -316,6 +325,7 @@ void ginfo (void)
 	size_t n = MAX_BUFFER_SIZE;
 	bool invalid = true;
 	ssize_t chars = 0;
+	char *text = NULL;
 	const char prompt[] = "Input the shoe description:";
 	printf("%s", prompt);
 	memset(*_info_, 0, MAX_BUFFER_SIZE);
@@ -348,7 +358,15 @@ void ginfo (void)
 			n = MAX_BUFFER_SIZE;
 			printf("%s", prompt);
 		} else {
-			invalid = false;
+			text = *_info_ ;
+			skipWhiteSpace(&text);
+			if (!*text || *text == '\n') {
+				invalid = true;
+				printf("Please input a valid description\n");
+				printf("%s", prompt);
+			} else {
+				invalid = false;
+			}
 		}
 
 	} while (chars == -1 || invalid);
