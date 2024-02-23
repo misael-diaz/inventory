@@ -4,6 +4,9 @@
 #include <cerrno>
 #include <cctype>
 
+#define MAX_STRING_LEN (0x03ff)
+#define MAX_BUFFER_SIZE (MAX_STRING_LEN + 1)
+
 static size_t _sz_ = 0;		// size of temporary placeholder
 static char *_temp_[] = {NULL};	// temporary placeholder for fetching the entire line
 static char *_code_[] = {NULL};	// shoe reference code could be alpha numeric
@@ -31,7 +34,8 @@ void avail(void);
 void cost(void);
 void sale(void);
 void greet(void);
-// memory handling utility:
+// memory handling utilities:
+void init(void);
 void cleanup(void);
 // console manipulators:
 void clear(void);
@@ -39,6 +43,7 @@ void pause(void);
 
 int main ()
 {
+	init();
 	head();
 
 	gcode();
@@ -177,6 +182,7 @@ static void validData (const char *fname,
 		       const char *msg = "Please input valid data")
 {
 	*number = 0;
+	memset(*_temp_, 0, _sz_);
 	printf("%s", prompt);
 	ssize_t chars = 0;
 	bool invalid = true;
@@ -192,6 +198,21 @@ static void validData (const char *fname,
 			clearerr(stdin);
 			printf("\n%s\n", msg);
 			printf("%s", prompt);
+		} else if (chars > MAX_STRING_LEN) {
+
+			invalid = true;
+			char msg[] = "The input exceeds the max number of chars %d\n";
+			printf(msg, MAX_STRING_LEN);
+			*_temp_ = (char*) realloc(*_temp_, MAX_BUFFER_SIZE);
+			if (!*_temp_) {
+				fprintf(stderr, "validData: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			memset(*_temp_, 0, MAX_BUFFER_SIZE);
+			_sz_ = MAX_BUFFER_SIZE;
+			printf("%s", prompt);
+
 		} else {
 
 			if (!is_numeric(_temp_)) {
@@ -215,6 +236,33 @@ static void validData (const char *fname,
 	} while (chars == -1 || invalid);
 }
 
+void init (void)
+{
+	size_t const sz = MAX_BUFFER_SIZE;
+	*_temp_ = (char*) malloc(sz);
+	if (!*_temp_) {
+		fprintf(stderr, "init: %s\n", strerror(errno));
+		cleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	*_code_ = (char*) malloc(sz);
+	if (!*_code_) {
+		fprintf(stderr, "init: %s\n", strerror(errno));
+		cleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	*_info_ = (char*) malloc(sz);
+	if (!*_info_) {
+		fprintf(stderr, "init: %s\n", strerror(errno));
+		cleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	_sz_ = sz;
+}
+
 void head (void)
 {
 	printf("SHOE SALES INVENTORY PROGRAM\n");
@@ -222,10 +270,12 @@ void head (void)
 
 void gcode (void)
 {
-	size_t n = 0;
+	size_t n = MAX_BUFFER_SIZE;
+	bool invalid = true;
 	ssize_t chars = 0;
 	const char prompt[] = "Input the shoe reference code:";
 	printf("%s", prompt);
+	memset(*_code_, 0, MAX_BUFFER_SIZE);
 	do {
 		errno = 0;
 		chars = getline(_code_, &n, stdin);
@@ -240,17 +290,35 @@ void gcode (void)
 			clearerr(stdin);
 			printf("\nPlease input valid data\n");
 			printf("%s", prompt);
+
+		} else if (chars > MAX_STRING_LEN) {
+			invalid = true;
+			char msg[] = "The input exceeds the max number of chars %d\n";
+			printf(msg, MAX_STRING_LEN);
+			*_code_ = (char*) realloc(*_code_, MAX_BUFFER_SIZE);
+			if (!*_code_) {
+				fprintf(stderr, "gcode: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			memset(*_code_, 0, MAX_BUFFER_SIZE);
+			n = MAX_BUFFER_SIZE;
+			printf("%s", prompt);
+		} else {
+			invalid = false;
 		}
 
-	} while (chars == -1);
+	} while (chars == -1 || invalid);
 }
 
 void ginfo (void)
 {
-	size_t n = 0;
+	size_t n = MAX_BUFFER_SIZE;
+	bool invalid = true;
 	ssize_t chars = 0;
 	const char prompt[] = "Input the shoe description:";
 	printf("%s", prompt);
+	memset(*_info_, 0, MAX_BUFFER_SIZE);
 	do {
 		errno = 0;
 		chars = getline(_info_, &n, stdin);
@@ -265,9 +333,25 @@ void ginfo (void)
 			clearerr(stdin);
 			printf("\nPlease input valid data\n");
 			printf("%s", prompt);
+
+		} else if (chars > MAX_STRING_LEN) {
+			invalid = true;
+			char msg[] = "The input exceeds max number of chars %d\n";
+			printf(msg, MAX_STRING_LEN);
+			*_info_ = (char*) realloc(*_info_, MAX_BUFFER_SIZE);
+			if (!*_info_) {
+				fprintf(stderr, "ginfo: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			memset(*_info_, 0, MAX_BUFFER_SIZE);
+			n = MAX_BUFFER_SIZE;
+			printf("%s", prompt);
+		} else {
+			invalid = false;
 		}
 
-	} while (chars == -1);
+	} while (chars == -1 || invalid);
 }
 
 void gsize (void)
@@ -281,6 +365,7 @@ void gavail (void)
 	char *text = NULL;
 	ssize_t chars = 0;
 	bool invalid = true;
+	memset(*_temp_, 0, _sz_);
 	char prompt[] = "Input N/Y if the shoe is (un)available for sale:";
 	printf("%s", prompt);
 	do {
@@ -289,13 +374,29 @@ void gavail (void)
 		if (chars == -1) {
 
 			if (errno) {
-				fprintf(stderr, "ginfo: %s\n", strerror(errno));
+				fprintf(stderr, "gavail: %s\n", strerror(errno));
 				cleanup();
 				exit(EXIT_FAILURE);
 			}
 
 			clearerr(stdin);
 			printf("\nPlease input N/Y\n");
+			printf("%s", prompt);
+
+		} else if (chars > MAX_STRING_LEN) {
+
+			invalid = true;
+			char msg[] = "The input exceeds the max number of chars %d\n";
+			printf(msg, MAX_STRING_LEN);
+			printf("Please input just N/Y\n");
+			*_temp_ = (char*) realloc(*_temp_, MAX_BUFFER_SIZE);
+			if (!*_temp_) {
+				fprintf(stderr, "gavail: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			memset(*_temp_, 0, MAX_BUFFER_SIZE);
+			_sz_ = MAX_BUFFER_SIZE;
 			printf("%s", prompt);
 
 		} else {
