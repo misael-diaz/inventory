@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cerrno>
 #include <cctype>
+#include <cmath>
 
 #define MAX_STRING_LEN (0x03ff)
 #define MAX_BUFFER_SIZE (MAX_STRING_LEN + 1)
@@ -16,6 +17,7 @@ static char _avail_ = 0;	// shoe availability (Y/N)
 static double _cost_ = 0;	// shoe cost
 static double _sale_ = 0;	// shoe sale value
 static double _number_ = 0;	// placeholder for real numbers
+static double _count_ = 0;	// shoe count
 
 // headers:
 void head(void);
@@ -27,6 +29,7 @@ void gsize(void);
 void gavail(void);
 void gcost(void);
 void gsale(void);
+void gcount(void);
 // loggers:
 void code(void);
 void info(void);
@@ -34,6 +37,7 @@ void size(void);
 void avail(void);
 void cost(void);
 void sale(void);
+void count(void);
 void greet(void);
 // memory handling utilities:
 void init(void);
@@ -53,6 +57,7 @@ int main ()
 	gavail();
 	gcost();
 	gsale();
+	gcount();
 
 	clear();
 
@@ -63,6 +68,7 @@ int main ()
 	avail();
 	cost();
 	sale();
+	count();
 	greet();
 
 	cleanup();
@@ -172,6 +178,20 @@ static void callback (bool *invalid)
 	double cost = _cost_ ;
 	if (sale <= cost) {
 		printf("The sale value must be greater than the cost\n");
+		*invalid = true;
+	}
+
+	return;
+}
+
+static void callback_cnt (bool *invalid)
+{
+	if (*invalid) {
+		return;
+	}
+
+	if (floor(_number_) != ceil(_number_)) {
+		printf("The shoe count must be an integral value\n");
 		*invalid = true;
 	}
 
@@ -466,6 +486,15 @@ void gsale (void)
 	_sale_ = _number_ ;
 }
 
+void gcount (void)
+{
+	char prompt[] = "Input the shoe count:";
+	void (*cb) (bool*) = callback_cnt;
+	char msg[] = "Please input a valid shoe count value";
+	validData("gcount", prompt, cb, msg);
+	_count_ = _number_ ;
+}
+
 void header (void)
 {
 	printf("THE SHOE INPUT DATA IS THE FOLLOWING\n\n");
@@ -499,6 +528,11 @@ void cost (void)
 void sale (void)
 {
 	printf("SALE: %.2f\n", _sale_);
+}
+
+void count (void)
+{
+	printf("COUNT: %.0f\n", _count_);
 }
 
 void greet (void)
