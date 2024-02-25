@@ -100,8 +100,19 @@ static bool isNumber (char const c)
 
 static void skipWhiteSpace (char **txt)
 {
-	while (**txt && **txt <= ' ') {
+	while (**txt && **txt != '\n' && **txt <= ' ') {
 		++*txt;
+	}
+}
+
+static void nullTrailWhiteSpace (char **text)
+{
+	size_t const len = strlen(*text);
+	char *txt = *text;
+	char *iter = &txt[len - 1];
+	while (*iter <= ' ') {
+		*iter = 0;
+		--iter;
 	}
 }
 
@@ -113,6 +124,11 @@ static bool is_numeric (char **text)
 	}
 
 	skipWhiteSpace(text);
+	if (!**text || **text == '\n') {
+		*text = start;
+		return false;
+	}
+
 	char *iter = *text;
 	bool space = false;
 	while (*iter && *iter != '\n') {
@@ -506,12 +522,18 @@ void header (void)
 
 void code (void)
 {
-	printf("REFERENCE: %s", *_code_);
+	char *code = *_code_ ;
+	skipWhiteSpace(&code);
+	nullTrailWhiteSpace(&code);
+	printf("REFERENCE: %s\n", code);
 }
 
 void info (void)
 {
-	printf("DESCRIPTION: %s", *_info_);
+	char *info = *_info_ ;
+	skipWhiteSpace(&info);
+	nullTrailWhiteSpace(&info);
+	printf("DESCRIPTION: %s\n", info);
 }
 
 void size (void)
