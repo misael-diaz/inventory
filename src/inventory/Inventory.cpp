@@ -511,12 +511,16 @@ void header (void)
 
 void code (void)
 {
-	printf("REFERENCE: %s", *_code_);
+	char *code = *_code_ ;
+	skipWhiteSpace(&code);
+	printf("REFERENCE: %s", code);
 }
 
 void info (void)
 {
-	printf("DESCRIPTION: %s", *_info_);
+	char *info = *_info_ ;
+	skipWhiteSpace(&info);
+	printf("DESCRIPTION: %s", info);
 }
 
 void size (void)
