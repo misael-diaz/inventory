@@ -525,7 +525,8 @@ void code (void)
 	char *code = *_code_ ;
 	skipWhiteSpace(&code);
 	nullTrailWhiteSpace(&code);
-	printf("REFERENCE: %s\n", code);
+	memmove(*_code_, code, 1 + strlen(code));
+	printf("REFERENCE: %s\n", *_code_);
 }
 
 void info (void)
@@ -533,7 +534,8 @@ void info (void)
 	char *info = *_info_ ;
 	skipWhiteSpace(&info);
 	nullTrailWhiteSpace(&info);
-	printf("DESCRIPTION: %s\n", info);
+	memmove(*_info_, info, 1 + strlen(info));
+	printf("DESCRIPTION: %s\n", *_info_);
 }
 
 void size (void)
