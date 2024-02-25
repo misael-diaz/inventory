@@ -38,6 +38,8 @@ void avail(void);
 void cost(void);
 void sale(void);
 void count(void);
+void total(void);
+void profit(void);
 void greet(void);
 // memory handling utilities:
 void init(void);
@@ -69,6 +71,8 @@ int main ()
 	cost();
 	sale();
 	count();
+	total();
+	profit();
 	greet();
 
 	cleanup();
@@ -533,6 +537,30 @@ void sale (void)
 void count (void)
 {
 	printf("COUNT: %.0f\n", _count_);
+}
+
+void total (void)
+{
+	double const cost = _cost_ ;
+	double const sale = _sale_ ;
+	double const units = _count_ ;
+	double const total_cost = units * cost;
+	double const total_sale = units * sale;
+	printf("TOTAL COST: %.2f\n", total_cost);
+	printf("TOTAL PROFIT OF %.0f UNITS: %.2f\n", units, total_sale);
+}
+
+void profit (void)
+{
+	double const cost = _cost_ ;
+	double const sale = _sale_ ;
+	double const units = _count_ ;
+	double const profit = (sale - cost);
+	double const total_cost = units * cost;
+	double const net_profit = units * (sale - cost);
+	printf("PROFIT PER UNIT: %.2f\n", profit);
+	printf("NET PROFIT: %.2f\n", net_profit);
+	printf("PROFIT PERCENTAGE: %.2f\n", (net_profit / total_cost) * 100);
 }
 
 void greet (void)
