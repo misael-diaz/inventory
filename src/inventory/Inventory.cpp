@@ -113,6 +113,11 @@ static bool is_numeric (char **text)
 	}
 
 	skipWhiteSpace(text);
+	if (!**text || **text == '\n') {
+		*text = start;
+		return false;
+	}
+
 	char *iter = *text;
 	bool space = false;
 	while (*iter && *iter != '\n') {
