@@ -105,6 +105,17 @@ static void skipWhiteSpace (char **txt)
 	}
 }
 
+static void nullTrailWhiteSpace (char **text)
+{
+	size_t const len = strlen(*text);
+	char *txt = *text;
+	char *iter = &txt[len - 1];
+	while (*iter <= ' ') {
+		*iter = 0;
+		--iter;
+	}
+}
+
 static bool is_numeric (char **text)
 {
 	char *start = *text;
@@ -513,14 +524,16 @@ void code (void)
 {
 	char *code = *_code_ ;
 	skipWhiteSpace(&code);
-	printf("REFERENCE: %s", code);
+	nullTrailWhiteSpace(&code);
+	printf("REFERENCE: %s\n", code);
 }
 
 void info (void)
 {
 	char *info = *_info_ ;
 	skipWhiteSpace(&info);
-	printf("DESCRIPTION: %s", info);
+	nullTrailWhiteSpace(&info);
+	printf("DESCRIPTION: %s\n", info);
 }
 
 void size (void)
