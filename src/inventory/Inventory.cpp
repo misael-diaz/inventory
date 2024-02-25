@@ -100,7 +100,7 @@ static bool isNumber (char const c)
 
 static void skipWhiteSpace (char **txt)
 {
-	while (**txt && **txt <= ' ') {
+	while (**txt && **txt != '\n' && **txt <= ' ') {
 		++*txt;
 	}
 }
