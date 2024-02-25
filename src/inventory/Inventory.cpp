@@ -360,6 +360,11 @@ void gcode (void)
 		}
 
 	} while (chars == -1 || invalid);
+
+	char *code = *_code_ ;
+	skipWhiteSpace(&code);
+	nullTrailWhiteSpace(&code);
+	memmove(*_code_, code, 1 + strlen(code));
 }
 
 void ginfo (void)
@@ -412,6 +417,11 @@ void ginfo (void)
 		}
 
 	} while (chars == -1 || invalid);
+
+	char *info = *_info_ ;
+	skipWhiteSpace(&info);
+	nullTrailWhiteSpace(&info);
+	memmove(*_info_, info, 1 + strlen(info));
 }
 
 void gsize (void)
@@ -522,19 +532,11 @@ void header (void)
 
 void code (void)
 {
-	char *code = *_code_ ;
-	skipWhiteSpace(&code);
-	nullTrailWhiteSpace(&code);
-	memmove(*_code_, code, 1 + strlen(code));
 	printf("REFERENCE: %s\n", *_code_);
 }
 
 void info (void)
 {
-	char *info = *_info_ ;
-	skipWhiteSpace(&info);
-	nullTrailWhiteSpace(&info);
-	memmove(*_info_, info, 1 + strlen(info));
 	printf("DESCRIPTION: %s\n", *_info_);
 }
 
