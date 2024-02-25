@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cerrno>
 #include <cctype>
+#include <cmath>
 
 #define MAX_STRING_LEN (0x03ff)
 #define MAX_BUFFER_SIZE (MAX_STRING_LEN + 1)
@@ -15,6 +16,8 @@ static double _size_ = 0;	// shoe size
 static char _avail_ = 0;	// shoe availability (Y/N)
 static double _cost_ = 0;	// shoe cost
 static double _sale_ = 0;	// shoe sale value
+static double _number_ = 0;	// placeholder for real numbers
+static double _count_ = 0;	// shoe count
 
 // headers:
 void head(void);
@@ -26,6 +29,7 @@ void gsize(void);
 void gavail(void);
 void gcost(void);
 void gsale(void);
+void gcount(void);
 // loggers:
 void code(void);
 void info(void);
@@ -33,6 +37,9 @@ void size(void);
 void avail(void);
 void cost(void);
 void sale(void);
+void count(void);
+void total(void);
+void profit(void);
 void greet(void);
 // memory handling utilities:
 void init(void);
@@ -52,6 +59,7 @@ int main ()
 	gavail();
 	gcost();
 	gsale();
+	gcount();
 
 	clear();
 
@@ -62,6 +70,9 @@ int main ()
 	avail();
 	cost();
 	sale();
+	count();
+	total();
+	profit();
 	greet();
 
 	cleanup();
@@ -135,12 +146,12 @@ static bool is_numeric (char **text)
 	return true;
 }
 
-static bool toNumber (char **text, double *number)
+static bool toNumber (char **text)
 {
 	bool invalid = true;
 	errno = 0;
 	char *endptr[] = {NULL};
-	*number = strtod(*text, endptr);
+	_number_ = strtod(*text, endptr);
 	if (errno == ERANGE) {
 		invalid = true;
 	} else if (!isspace(**endptr)) {
@@ -167,8 +178,24 @@ static void callback (bool *invalid)
 		return;
 	}
 
-	if (_sale_ <= _cost_) {
+	double sale = _number_ ;
+	double cost = _cost_ ;
+	if (sale <= cost) {
 		printf("The sale value must be greater than the cost\n");
+		*invalid = true;
+	}
+
+	return;
+}
+
+static void callback_cnt (bool *invalid)
+{
+	if (*invalid) {
+		return;
+	}
+
+	if (floor(_number_) != ceil(_number_)) {
+		printf("The shoe count must be an integral value\n");
 		*invalid = true;
 	}
 
@@ -177,11 +204,10 @@ static void callback (bool *invalid)
 
 static void validData (const char *fname,
 		       const char *prompt,
-		       double *number,
 		       void (*cb)(bool *invalid) = default_callback,
 		       const char *msg = "Please input valid data")
 {
-	*number = 0;
+	_number_ = 0;
 	memset(*_temp_, 0, _sz_);
 	printf("%s", prompt);
 	ssize_t chars = 0;
@@ -218,10 +244,10 @@ static void validData (const char *fname,
 			if (!is_numeric(_temp_)) {
 				invalid = true;
 			} else {
-				invalid = toNumber(_temp_, number);
+				invalid = toNumber(_temp_);
 			}
 
-			if (*number < 0) {
+			if (_number_ < 0) {
 				invalid = true;
 			}
 
@@ -375,7 +401,8 @@ void ginfo (void)
 void gsize (void)
 {
 	char prompt[] = "Input the shoe size:";
-	validData("gsize", prompt, &_size_);
+	validData("gsize", prompt);
+	_size_ = _number_ ;
 }
 
 void gavail (void)
@@ -450,7 +477,8 @@ void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
 	char msg[] = "Please input a valid shoe cost value";
-	validData("gcost", prompt, &_cost_, default_callback, msg);
+	validData("gcost", prompt, default_callback, msg);
+	_cost_ = _number_ ;
 }
 
 void gsale (void)
@@ -458,7 +486,17 @@ void gsale (void)
 	char prompt[] = "Input the shoe sale value:";
 	void (*cb) (bool*) = callback;
 	char msg[] = "Please input a valid shoe sale value";
-	validData("gsale", prompt, &_sale_, cb, msg);
+	validData("gsale", prompt, cb, msg);
+	_sale_ = _number_ ;
+}
+
+void gcount (void)
+{
+	char prompt[] = "Input the shoe count:";
+	void (*cb) (bool*) = callback_cnt;
+	char msg[] = "Please input a valid shoe count value";
+	validData("gcount", prompt, cb, msg);
+	_count_ = _number_ ;
 }
 
 void header (void)
@@ -494,6 +532,35 @@ void cost (void)
 void sale (void)
 {
 	printf("SALE: %.2f\n", _sale_);
+}
+
+void count (void)
+{
+	printf("COUNT: %.0f\n", _count_);
+}
+
+void total (void)
+{
+	double const cost = _cost_ ;
+	double const sale = _sale_ ;
+	double const units = _count_ ;
+	double const total_cost = units * cost;
+	double const total_sale = units * sale;
+	printf("TOTAL COST: %.2f\n", total_cost);
+	printf("TOTAL PROFIT OF %.0f UNITS: %.2f\n", units, total_sale);
+}
+
+void profit (void)
+{
+	double const cost = _cost_ ;
+	double const sale = _sale_ ;
+	double const units = _count_ ;
+	double const profit = (sale - cost);
+	double const total_cost = units * cost;
+	double const net_profit = units * (sale - cost);
+	printf("PROFIT PER UNIT: %.2f\n", profit);
+	printf("NET PROFIT: %.2f\n", net_profit);
+	printf("PROFIT PERCENTAGE: %.2f\n", (net_profit / total_cost) * 100);
 }
 
 void greet (void)
