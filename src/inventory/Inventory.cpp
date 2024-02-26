@@ -34,6 +34,29 @@ struct Kind
 	void operator delete(void *p);
 };
 
+struct Item
+{
+	char *code = NULL;
+	char *info = NULL;
+	char *avail = NULL;
+	double *size = NULL;
+	double *cost = NULL;
+	double *sale = NULL;
+	double *count = NULL;
+	Kind *kind = NULL;
+	Item(char *code,
+	     char *info,
+	     char *avail,
+	     double *size,
+	     double *cost,
+	     double *sale,
+	     double *count,
+	     Kind *kind);
+	void log() const;
+	void *operator new(size_t size);
+	void operator delete(void *p);
+};
+
 static m_chain_t m_chain;
 static size_t m_size = 0;
 static size_t m_count = 0;
@@ -48,6 +71,7 @@ static double _cost_ = 0;	// shoe cost
 static double _sale_ = 0;	// shoe sale value
 static double _number_ = 0;	// placeholder for real numbers
 static double _count_ = 0;	// shoe count
+static kind_t _kind_ = A;	// shoe kind
 
 // headers:
 void head(void);
@@ -60,6 +84,8 @@ void gavail(void);
 void gcost(void);
 void gsale(void);
 void gcount(void);
+void gkind(void);
+Item *gitem(void);
 // loggers:
 void code(void);
 void info(void);
@@ -68,6 +94,7 @@ void avail(void);
 void cost(void);
 void sale(void);
 void count(void);
+void kind(void);
 void total(void);
 void profit(void);
 void greet(void);
@@ -76,11 +103,14 @@ void init(void);
 void cleanup(void);
 void *Util_Malloc(size_t const sz);
 void *Util_Free(void *p);
+char *Util_CopyString(char *string);
+double *Util_CopyNumber(double *num);
 void Util_Clear(void);
 // console manipulators:
 void clear(void);
 void pause(void);
 
+#if defined(DEBUG) && DEBUG
 int main ()
 {
 	init();
@@ -91,6 +121,7 @@ int main ()
 	gsize();
 	gavail();
 	gcost();
+	gkind();
 	gsale();
 	gcount();
 
@@ -102,6 +133,44 @@ int main ()
 	size();
 	avail();
 	cost();
+	kind();
+	sale();
+	count();
+	total();
+	profit();
+	greet();
+
+	Item *item = gitem();
+	item->log();
+
+	cleanup();
+	pause();
+	return EXIT_SUCCESS;
+}
+#else
+int main ()
+{
+	init();
+	head();
+
+	gcode();
+	ginfo();
+	gsize();
+	gavail();
+	gcost();
+	gkind();
+	gsale();
+	gcount();
+
+	clear();
+
+	header();
+	code();
+	info();
+	size();
+	avail();
+	cost();
+	kind();
 	sale();
 	count();
 	total();
@@ -112,6 +181,7 @@ int main ()
 	pause();
 	return EXIT_SUCCESS;
 }
+#endif
 
 static m_chain_t *Util_Chain (m_chain_t *node)
 {
@@ -398,7 +468,7 @@ void *Util_Malloc (size_t const sz)
 	return data;
 }
 
-char *Util_CopyString (const char *string)
+char *Util_CopyString (char *string)
 {
 	size_t const len = strlen(string);
 	size_t const sz = (len + 1);
@@ -408,9 +478,113 @@ char *Util_CopyString (const char *string)
 		return NULL;
 	}
 
-	const char *src = string;
+	char *src = string;
 	char *dst = (char*) ptr;
 	return strcpy(dst, src);
+}
+
+double *Util_CopyNumber (double *num)
+{
+	double *ptr = (double*) Util_Malloc(sizeof(*num));
+	if (!ptr) {
+		fprintf(stderr, "Util_CopyNumber: error\n");
+		return NULL;
+	}
+
+	*ptr = *num;
+	return ptr;
+}
+
+Kind::Kind (kind_t const kind) : kind(kind)
+{
+	return;
+}
+
+kind_t Kind::k () const
+{
+	return this->kind;
+}
+
+const char *Kind::stringify (const Kind *kind)
+{
+	kind_t const k = kind->k();
+	switch(k) {
+		case A:
+			return "A";
+		case B:
+			return "B";
+		default:
+			return "C";
+	}
+}
+
+kind_t Kind::enumerator (const char *kind)
+{
+	if (!strcmp(kind, "A")) {
+		return A;
+	}
+
+	if (!strcmp(kind, "B")) {
+		return B;
+	}
+
+	if (!strcmp(kind, "C")) {
+		return C;
+	}
+
+	kind_t unknown = ((kind_t) 0xffffffff);
+	return unknown;
+}
+
+void *Kind::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Kind::operator delete (void *p)
+{
+	p = Util_Free(p);
+}
+
+Item::Item (char *code,
+            char *info,
+            char *avail,
+            double *size,
+            double *cost,
+            double *sale,
+            double *count,
+            Kind *kind)
+{
+	this->code = code;
+	this->info = info;
+	this->avail = avail;
+	this->size = size;
+	this->cost = cost;
+	this->sale = sale;
+	this->count = count;
+	this->kind = kind;
+}
+
+void Item::log () const
+{
+	printf("REFERENCE: %s\n", this->code);
+	printf("DESCRIPTION: %s\n", this->info);
+	printf("SIZE: %.1f\n", *this->size);
+	printf("AVAILABLE: %s\n", this->avail);
+	printf("COST: %.2f\n", *this->cost);
+	printf("SALE: %.2f\n", *this->sale);
+	printf("COUNT: %.0f\n", *this->count);
+	printf("KIND: %s\n", this->kind->stringify(this->kind));
+}
+
+void *Item::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Item::operator delete (void *p)
+{
+	p = Util_Free(p);
 }
 
 void init (void)
@@ -660,6 +834,87 @@ void gcount (void)
 	_count_ = _number_ ;
 }
 
+Item *gitem (void)
+{
+	char *code = Util_CopyString(*_code_);
+	if (!code) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	char *info = Util_CopyString(*_info_);
+	if (!info) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(*_temp_, 0, MAX_BUFFER_SIZE);
+	**_temp_ = _avail_ ;
+	char *avail = Util_CopyString(*_temp_);
+	if (!avail) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *size = Util_CopyNumber(&_size_);
+	if (!size) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *cost = Util_CopyNumber(&_cost_);
+	if (!cost) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *sale = Util_CopyNumber(&_sale_);
+	if (!sale) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *count = Util_CopyNumber(&_count_);
+	if (!count) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	Kind *kind = new Kind(_kind_);
+	if (!kind) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	Item *item = new Item(code, info, avail, size, cost, sale, count, kind);
+	if (!item) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	return item;
+}
+
+void gkind (void)
+{
+	if (_cost_ > 60.0e3) {
+		_kind_ = C;
+	} else if (_cost_ >= 30.0e3 && _cost_ < 60.0e3) {
+		_kind_ = B;
+	} else {
+		_kind_ = A;
+	}
+}
+
 void header (void)
 {
 	printf("THE SHOE INPUT DATA IS THE FOLLOWING\n\n");
@@ -698,6 +953,23 @@ void sale (void)
 void count (void)
 {
 	printf("COUNT: %.0f\n", _count_);
+}
+
+void kind (void)
+{
+	char k = ((kind_t) 0);
+	switch (_kind_) {
+		case A:
+			k = 'A';
+			break;
+		case B:
+			k = 'B';
+			break;
+		default:
+			k = 'C';
+	}
+
+	printf("KIND: %c\n", k);
 }
 
 void total (void)
@@ -795,54 +1067,3 @@ References:
 [1] https://www.man7.org/linux/man-pages/man3/system.3.html
 
 */
-
-Kind::Kind (kind_t const kind) : kind(kind)
-{
-	return;
-}
-
-kind_t Kind::k () const
-{
-	return this->kind;
-}
-
-const char *Kind::stringify (const Kind *kind)
-{
-	kind_t const k = kind->k();
-	switch(k) {
-		case A:
-			return "A";
-		case B:
-			return "B";
-		default:
-			return "C";
-	}
-}
-
-kind_t Kind::enumerator (const char *kind)
-{
-	if (!strcmp(kind, "A")) {
-		return A;
-	}
-
-	if (!strcmp(kind, "B")) {
-		return B;
-	}
-
-	if (!strcmp(kind, "C")) {
-		return C;
-	}
-
-	kind_t unknown = ((kind_t) 0xffffffff);
-	return unknown;
-}
-
-void *Kind::operator new (size_t size)
-{
-	return Util_Malloc(size);
-}
-
-void Kind::operator delete (void *p)
-{
-	p = Util_Free(p);
-}
