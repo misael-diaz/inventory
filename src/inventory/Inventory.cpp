@@ -52,6 +52,7 @@ struct Item
 	     double *sale,
 	     double *count,
 	     Kind *kind);
+	void log() const;
 	void *operator new(size_t size);
 	void operator delete(void *p);
 };
@@ -84,6 +85,7 @@ void gcost(void);
 void gsale(void);
 void gcount(void);
 void gkind(void);
+Item *gitem(void);
 // loggers:
 void code(void);
 void info(void);
@@ -108,6 +110,44 @@ void Util_Clear(void);
 void clear(void);
 void pause(void);
 
+#if defined(DEBUG) && DEBUG
+int main ()
+{
+	init();
+	head();
+
+	gcode();
+	ginfo();
+	gsize();
+	gavail();
+	gcost();
+	gkind();
+	gsale();
+	gcount();
+
+	clear();
+
+	header();
+	code();
+	info();
+	size();
+	avail();
+	cost();
+	kind();
+	sale();
+	count();
+	total();
+	profit();
+	greet();
+
+	Item *item = gitem();
+	item->log();
+
+	cleanup();
+	pause();
+	return EXIT_SUCCESS;
+}
+#else
 int main ()
 {
 	init();
@@ -141,6 +181,7 @@ int main ()
 	pause();
 	return EXIT_SUCCESS;
 }
+#endif
 
 static m_chain_t *Util_Chain (m_chain_t *node)
 {
@@ -524,6 +565,18 @@ Item::Item (char *code,
 	this->kind = kind;
 }
 
+void Item::log () const
+{
+	printf("REFERENCE: %s\n", this->code);
+	printf("DESCRIPTION: %s\n", this->info);
+	printf("SIZE: %.1f\n", *this->size);
+	printf("AVAILABLE: %s\n", this->avail);
+	printf("COST: %.2f\n", *this->cost);
+	printf("SALE: %.2f\n", *this->sale);
+	printf("COUNT: %.0f\n", *this->count);
+	printf("KIND: %s\n", this->kind->stringify(this->kind));
+}
+
 void *Item::operator new (size_t size)
 {
 	return Util_Malloc(size);
@@ -779,6 +832,76 @@ void gcount (void)
 	char msg[] = "Please input a valid shoe count value";
 	validData("gcount", prompt, cb, msg);
 	_count_ = _number_ ;
+}
+
+Item *gitem (void)
+{
+	char *code = Util_CopyString(*_code_);
+	if (!code) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	char *info = Util_CopyString(*_info_);
+	if (!info) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(*_temp_, 0, MAX_BUFFER_SIZE);
+	**_temp_ = _avail_ ;
+	char *avail = Util_CopyString(*_temp_);
+	if (!avail) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *size = Util_CopyNumber(&_size_);
+	if (!size) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *cost = Util_CopyNumber(&_cost_);
+	if (!cost) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *sale = Util_CopyNumber(&_sale_);
+	if (!sale) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	double *count = Util_CopyNumber(&_count_);
+	if (!count) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	Kind *kind = new Kind(_kind_);
+	if (!kind) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	Item *item = new Item(code, info, avail, size, cost, sale, count, kind);
+	if (!item) {
+		Util_Clear();
+		fprintf(stderr, "gitem: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	return item;
 }
 
 void gkind (void)

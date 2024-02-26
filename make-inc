@@ -14,4 +14,4 @@
 #
 
 CXX = g++-10
-CXXOPT = -std=gnu++11 -g -Wall -Wextra -Wformat -O0
+CXXOPT = -DDEBUG=1 -std=gnu++11 -g -Wall -Wextra -Wformat -O0
