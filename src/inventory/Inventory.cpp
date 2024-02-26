@@ -7,6 +7,19 @@
 
 #define MAX_STRING_LEN (0x03ff)
 #define MAX_BUFFER_SIZE (MAX_STRING_LEN + 1)
+#define HASH ((size_t) 0xffff20240feb0025)
+
+typedef struct m_chain_s {
+	struct m_chain_s *prev;
+	struct m_chain_s *next;
+	void *data;
+	size_t hash;
+	size_t size;
+} m_chain_t;
+
+static m_chain_t m_chain;
+static size_t m_size = 0;
+static size_t m_count = 0;
 
 static size_t _sz_ = 0;		// size of temporary placeholder
 static char *_temp_[] = {NULL};	// temporary placeholder for fetching the entire line
@@ -44,6 +57,9 @@ void greet(void);
 // memory handling utilities:
 void init(void);
 void cleanup(void);
+void *Util_Malloc(size_t const sz);
+void *Util_Free(void *p);
+void Util_Clear(void);
 // console manipulators:
 void clear(void);
 void pause(void);
@@ -78,6 +94,36 @@ int main ()
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
+}
+
+static m_chain_t *Util_Chain (m_chain_t *node)
+{
+	m_chain_t *next = (m_chain.next)? m_chain.next : NULL;
+	if (next) {
+		next->prev = node;
+	}
+
+	node->next = next;
+	node->prev = &m_chain;
+	m_chain.next = node;
+	return node;
+}
+
+static m_chain_t *Util_Remove (m_chain_t *node)
+{
+	m_chain_t *prev = node->prev;
+	m_chain_t *next = node->next;
+	if (next) {
+		next->prev = prev;
+	}
+
+	prev->next = next;
+	node->next = NULL;
+	node->prev = NULL;
+	node->data = NULL;
+	free(node);
+	node = NULL;
+	return node;
 }
 
 static bool isValidSymbol (char const c)
@@ -278,24 +324,96 @@ static void validData (const char *fname,
 	} while (chars == -1 || invalid);
 }
 
+void *Util_Free (void *p)
+{
+	if (!p) {
+		return NULL;
+	}
+
+	m_chain_t *node = ((m_chain_t*) p) - 1;
+	if (node->hash != HASH) {
+		fprintf(stderr, "Util_Free: unregistered object error\n");
+		return p;
+	}
+
+	size_t const size = node->size;
+	node = Util_Remove(node);
+
+	m_size -= size;
+	--m_count;
+
+	return NULL;
+}
+
+void Util_Clear (void)
+{
+	m_chain_t *next = NULL;
+	for (m_chain_t *node = m_chain.next; node; node = next) {
+		next = node->next;
+		void *data = node->data;
+		node = (m_chain_t*) Util_Free(data);
+	}
+
+	m_size = 0;
+	m_count = 0;
+}
+
+void *Util_Malloc (size_t const sz)
+{
+	size_t const size = sizeof(m_chain_t) + sz;
+	void *p = malloc(size);
+	if (!p) {
+		fprintf(stderr, "Util_Malloc: %s\n", strerror(errno));
+		return NULL;
+	}
+
+	m_chain_t* node = (m_chain_t*) p;
+	void *data = (node + 1);
+
+	node = Util_Chain(node);
+	node->data = data;
+	node->hash = HASH;
+	node->size = size;
+
+	m_size += size;
+	++m_count;
+
+	return data;
+}
+
+char *Util_CopyString (const char *string)
+{
+	size_t const len = strlen(string);
+	size_t const sz = (len + 1);
+	void *ptr = Util_Malloc(sz);
+	if (!ptr) {
+		fprintf(stderr, "Util_CopyString: error\n");
+		return NULL;
+	}
+
+	const char *src = string;
+	char *dst = (char*) ptr;
+	return strcpy(dst, src);
+}
+
 void init (void)
 {
 	size_t const sz = MAX_BUFFER_SIZE;
-	*_temp_ = (char*) malloc(sz);
+	*_temp_ = (char*) Util_Malloc(sz);
 	if (!*_temp_) {
 		fprintf(stderr, "init: %s\n", strerror(errno));
 		cleanup();
 		exit(EXIT_FAILURE);
 	}
 
-	*_code_ = (char*) malloc(sz);
+	*_code_ = (char*) Util_Malloc(sz);
 	if (!*_code_) {
 		fprintf(stderr, "init: %s\n", strerror(errno));
 		cleanup();
 		exit(EXIT_FAILURE);
 	}
 
-	*_info_ = (char*) malloc(sz);
+	*_info_ = (char*) Util_Malloc(sz);
 	if (!*_info_) {
 		fprintf(stderr, "init: %s\n", strerror(errno));
 		cleanup();
@@ -596,20 +714,7 @@ void greet (void)
 
 void cleanup (void)
 {
-	if (*_temp_) {
-		free(*_temp_);
-		*_temp_ = NULL;
-	}
-
-	if (*_code_) {
-		free(*_code_);
-		*_code_ = NULL;
-	}
-
-	if (*_info_) {
-		free(*_info_);
-		*_info_ = NULL;
-	}
+	Util_Clear();
 }
 
 #if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
