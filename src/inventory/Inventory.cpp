@@ -70,6 +70,7 @@ static double _cost_ = 0;	// shoe cost
 static double _sale_ = 0;	// shoe sale value
 static double _number_ = 0;	// placeholder for real numbers
 static double _count_ = 0;	// shoe count
+static kind_t _kind_ = A;	// shoe kind
 
 // headers:
 void head(void);
@@ -82,6 +83,7 @@ void gavail(void);
 void gcost(void);
 void gsale(void);
 void gcount(void);
+void gkind(void);
 // loggers:
 void code(void);
 void info(void);
@@ -90,6 +92,7 @@ void avail(void);
 void cost(void);
 void sale(void);
 void count(void);
+void kind(void);
 void total(void);
 void profit(void);
 void greet(void);
@@ -113,6 +116,7 @@ int main ()
 	gsize();
 	gavail();
 	gcost();
+	gkind();
 	gsale();
 	gcount();
 
@@ -124,6 +128,7 @@ int main ()
 	size();
 	avail();
 	cost();
+	kind();
 	sale();
 	count();
 	total();
@@ -762,6 +767,17 @@ void gcount (void)
 	_count_ = _number_ ;
 }
 
+void gkind (void)
+{
+	if (_cost_ > 60.0e3) {
+		_kind_ = C;
+	} else if (_cost_ >= 30.0e3 && _cost_ < 60.0e3) {
+		_kind_ = B;
+	} else {
+		_kind_ = A;
+	}
+}
+
 void header (void)
 {
 	printf("THE SHOE INPUT DATA IS THE FOLLOWING\n\n");
@@ -800,6 +816,23 @@ void sale (void)
 void count (void)
 {
 	printf("COUNT: %.0f\n", _count_);
+}
+
+void kind (void)
+{
+	char k = ((kind_t) 0);
+	switch (_kind_) {
+		case A:
+			k = 'A';
+			break;
+		case B:
+			k = 'B';
+			break;
+		default:
+			k = 'C';
+	}
+
+	printf("KIND: %c\n", k);
 }
 
 void total (void)
