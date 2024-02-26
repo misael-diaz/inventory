@@ -52,6 +52,8 @@ struct Item
 	     double *sale,
 	     double *count,
 	     Kind *kind);
+	void *operator new(size_t size);
+	void operator delete(void *p);
 };
 
 static m_chain_t m_chain;
@@ -480,6 +482,35 @@ void *Kind::operator new (size_t size)
 }
 
 void Kind::operator delete (void *p)
+{
+	p = Util_Free(p);
+}
+
+Item::Item (char *code,
+            char *info,
+            char *avail,
+            double *size,
+            double *cost,
+            double *sale,
+            double *count,
+            Kind *kind)
+{
+	this->code = code;
+	this->info = info;
+	this->avail = avail;
+	this->size = size;
+	this->cost = cost;
+	this->sale = sale;
+	this->count = count;
+	this->kind = kind;
+}
+
+void *Item::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Item::operator delete (void *p)
 {
 	p = Util_Free(p);
 }
