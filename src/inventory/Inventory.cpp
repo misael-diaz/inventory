@@ -101,7 +101,7 @@ void init(void);
 void cleanup(void);
 void *Util_Malloc(size_t const sz);
 void *Util_Free(void *p);
-char *Util_CopyString(const char *string);
+char *Util_CopyString(char *string);
 double *Util_CopyNumber(double *num);
 void Util_Clear(void);
 // console manipulators:
@@ -427,7 +427,7 @@ void *Util_Malloc (size_t const sz)
 	return data;
 }
 
-char *Util_CopyString (const char *string)
+char *Util_CopyString (char *string)
 {
 	size_t const len = strlen(string);
 	size_t const sz = (len + 1);
@@ -437,7 +437,7 @@ char *Util_CopyString (const char *string)
 		return NULL;
 	}
 
-	const char *src = string;
+	char *src = string;
 	char *dst = (char*) ptr;
 	return strcpy(dst, src);
 }
