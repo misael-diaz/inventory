@@ -34,6 +34,26 @@ struct Kind
 	void operator delete(void *p);
 };
 
+struct Item
+{
+	char *code = NULL;
+	char *info = NULL;
+	char *avail = NULL;
+	double *size = NULL;
+	double *cost = NULL;
+	double *sale = NULL;
+	double *count = NULL;
+	Kind *kind = NULL;
+	Item(char *code,
+	     char *info,
+	     char *avail,
+	     double *size,
+	     double *cost,
+	     double *sale,
+	     double *count,
+	     Kind *kind);
+};
+
 static m_chain_t m_chain;
 static size_t m_size = 0;
 static size_t m_count = 0;
@@ -411,6 +431,57 @@ char *Util_CopyString (const char *string)
 	const char *src = string;
 	char *dst = (char*) ptr;
 	return strcpy(dst, src);
+}
+
+Kind::Kind (kind_t const kind) : kind(kind)
+{
+	return;
+}
+
+kind_t Kind::k () const
+{
+	return this->kind;
+}
+
+const char *Kind::stringify (const Kind *kind)
+{
+	kind_t const k = kind->k();
+	switch(k) {
+		case A:
+			return "A";
+		case B:
+			return "B";
+		default:
+			return "C";
+	}
+}
+
+kind_t Kind::enumerator (const char *kind)
+{
+	if (!strcmp(kind, "A")) {
+		return A;
+	}
+
+	if (!strcmp(kind, "B")) {
+		return B;
+	}
+
+	if (!strcmp(kind, "C")) {
+		return C;
+	}
+
+	kind_t unknown = ((kind_t) 0xffffffff);
+	return unknown;
+}
+
+void *Kind::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Kind::operator delete (void *p)
+{
+	p = Util_Free(p);
 }
 
 void init (void)
@@ -795,54 +866,3 @@ References:
 [1] https://www.man7.org/linux/man-pages/man3/system.3.html
 
 */
-
-Kind::Kind (kind_t const kind) : kind(kind)
-{
-	return;
-}
-
-kind_t Kind::k () const
-{
-	return this->kind;
-}
-
-const char *Kind::stringify (const Kind *kind)
-{
-	kind_t const k = kind->k();
-	switch(k) {
-		case A:
-			return "A";
-		case B:
-			return "B";
-		default:
-			return "C";
-	}
-}
-
-kind_t Kind::enumerator (const char *kind)
-{
-	if (!strcmp(kind, "A")) {
-		return A;
-	}
-
-	if (!strcmp(kind, "B")) {
-		return B;
-	}
-
-	if (!strcmp(kind, "C")) {
-		return C;
-	}
-
-	kind_t unknown = ((kind_t) 0xffffffff);
-	return unknown;
-}
-
-void *Kind::operator new (size_t size)
-{
-	return Util_Malloc(size);
-}
-
-void Kind::operator delete (void *p)
-{
-	p = Util_Free(p);
-}
