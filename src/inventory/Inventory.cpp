@@ -17,6 +17,23 @@ typedef struct m_chain_s {
 	size_t size;
 } m_chain_t;
 
+typedef enum {
+	A,
+	B,
+	C,
+} kind_t;
+
+struct Kind
+{
+	kind_t kind;
+	Kind(kind_t const kind);
+	kind_t k(void) const;
+	static const char *stringify(const Kind *kind);
+	static kind_t enumerator(const char *kind);
+	void *operator new(size_t size);
+	void operator delete(void *p);
+};
+
 static m_chain_t m_chain;
 static size_t m_size = 0;
 static size_t m_count = 0;
@@ -778,3 +795,54 @@ References:
 [1] https://www.man7.org/linux/man-pages/man3/system.3.html
 
 */
+
+Kind::Kind (kind_t const kind) : kind(kind)
+{
+	return;
+}
+
+kind_t Kind::k () const
+{
+	return this->kind;
+}
+
+const char *Kind::stringify (const Kind *kind)
+{
+	kind_t const k = kind->k();
+	switch(k) {
+		case A:
+			return "A";
+		case B:
+			return "B";
+		default:
+			return "C";
+	}
+}
+
+kind_t Kind::enumerator (const char *kind)
+{
+	if (!strcmp(kind, "A")) {
+		return A;
+	}
+
+	if (!strcmp(kind, "B")) {
+		return B;
+	}
+
+	if (!strcmp(kind, "C")) {
+		return C;
+	}
+
+	kind_t unknown = ((kind_t) 0xffffffff);
+	return unknown;
+}
+
+void *Kind::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Kind::operator delete (void *p)
+{
+	p = Util_Free(p);
+}
