@@ -101,6 +101,8 @@ void init(void);
 void cleanup(void);
 void *Util_Malloc(size_t const sz);
 void *Util_Free(void *p);
+char *Util_CopyString(const char *string);
+double *Util_CopyNumber(double *num);
 void Util_Clear(void);
 // console manipulators:
 void clear(void);
@@ -438,6 +440,18 @@ char *Util_CopyString (const char *string)
 	const char *src = string;
 	char *dst = (char*) ptr;
 	return strcpy(dst, src);
+}
+
+double *Util_CopyNumber (double *num)
+{
+	double *ptr = (double*) Util_Malloc(sizeof(*num));
+	if (!ptr) {
+		fprintf(stderr, "Util_CopyNumber: error\n");
+		return NULL;
+	}
+
+	*ptr = *num;
+	return ptr;
 }
 
 Kind::Kind (kind_t const kind) : kind(kind)
