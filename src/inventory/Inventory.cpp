@@ -28,8 +28,8 @@ struct Kind
 	kind_t kind;
 	Kind(kind_t const kind);
 	kind_t k(void) const;
-	static const char *stringify(const Kind *kind);
-	static kind_t enumerator(const char *kind);
+	const char *stringify(const Kind *kind);
+	kind_t enumerator(const char *kind);
 	void *operator new(size_t size);
 	void operator delete(void *p);
 };
