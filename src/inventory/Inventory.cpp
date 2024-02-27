@@ -89,18 +89,6 @@ void cleanup(void);
 void clear(void);
 void pause(void);
 
-#if defined(DEBUG) && DEBUG
-int main ()
-{
-	init();
-	get();
-	clear();
-	log();
-	cleanup();
-	pause();
-	return EXIT_SUCCESS;
-}
-#else
 int main ()
 {
 	init();
@@ -115,7 +103,6 @@ int main ()
 	pause();
 	return EXIT_SUCCESS;
 }
-#endif
 
 static m_chain_t *Util_Chain (m_chain_t *node)
 {
