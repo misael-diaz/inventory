@@ -68,6 +68,7 @@ static char *_info_[] = {NULL};	// shoe information might be a phrase
 static double _size_ = 0;	// shoe size
 static char _avail_ = 0;	// shoe availability (Y/N)
 static double _cost_ = 0;	// shoe cost
+static double _profit_ = 0;	// shoe profit per unit
 static double _sale_ = 0;	// shoe sale value
 static double _number_ = 0;	// placeholder for real numbers
 static double _count_ = 0;	// shoe count
@@ -255,10 +256,8 @@ static void callback (bool *invalid)
 		return;
 	}
 
-	double sale = _number_ ;
-	double cost = _cost_ ;
-	if (sale <= cost) {
-		printf("The sale value must be greater than the cost\n");
+	if (_number_ <= 0) {
+		printf("The cost value must be greater than zero\n");
 		*invalid = true;
 	}
 
@@ -740,17 +739,30 @@ void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
 	char msg[] = "Please input a valid shoe cost value";
-	validData("gcost", prompt, default_callback, msg);
+	validData("gcost", prompt, callback, msg);
 	_cost_ = _number_ ;
+}
+
+void gprofit (void)
+{
+	switch (_kind_) {
+		case A:
+			_profit_ = 0.50;
+			break;
+		case B:
+			_profit_ = 0.40;
+			break;
+		default:
+			_profit_ = 0.30;
+	}
 }
 
 void gsale (void)
 {
-	char prompt[] = "Input the shoe sale value:";
-	void (*cb) (bool*) = callback;
-	char msg[] = "Please input a valid shoe sale value";
-	validData("gsale", prompt, cb, msg);
-	_sale_ = _number_ ;
+	double const cost = _cost_ ;
+	double const profit = _profit_ ;
+	double const sale = cost * (profit + 1.0);
+	_sale_ = sale;
 }
 
 void gcount (void)
@@ -836,7 +848,7 @@ void gkind (void)
 {
 	if (_cost_ > 60.0e3) {
 		_kind_ = C;
-	} else if (_cost_ >= 30.0e3 && _cost_ < 60.0e3) {
+	} else if (_cost_ > 30.0e3 && _cost_ <= 60.0e3) {
 		_kind_ = B;
 	} else {
 		_kind_ = A;
@@ -977,6 +989,7 @@ void get (void)
 	gavail();
 	gcost();
 	gkind();
+	gprofit();
 	gsale();
 	gcount();
 }
