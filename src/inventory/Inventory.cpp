@@ -92,10 +92,8 @@ int main ()
 	get();
 	clear();
 	log();
-
 	Item *item = gitem();
 	item->log();
-
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -107,7 +105,6 @@ int main ()
 	get();
 	clear();
 	log();
-
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
