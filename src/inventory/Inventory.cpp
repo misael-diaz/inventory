@@ -77,6 +77,7 @@ static kind_t _kind_ = A;	// shoe kind
 void head(void);
 void header(void);
 // getters:
+void get(void);
 void gcode(void);
 void ginfo(void);
 void gsize(void);
@@ -87,6 +88,7 @@ void gcount(void);
 void gkind(void);
 Item *gitem(void);
 // loggers:
+void log(void);
 void code(void);
 void info(void);
 void size(void);
@@ -114,31 +116,9 @@ void pause(void);
 int main ()
 {
 	init();
-	head();
-
-	gcode();
-	ginfo();
-	gsize();
-	gavail();
-	gcost();
-	gkind();
-	gsale();
-	gcount();
-
+	get();
 	clear();
-
-	header();
-	code();
-	info();
-	size();
-	avail();
-	cost();
-	kind();
-	sale();
-	count();
-	total();
-	profit();
-	greet();
+	log();
 
 	Item *item = gitem();
 	item->log();
@@ -151,31 +131,9 @@ int main ()
 int main ()
 {
 	init();
-	head();
-
-	gcode();
-	ginfo();
-	gsize();
-	gavail();
-	gcost();
-	gkind();
-	gsale();
-	gcount();
-
+	get();
 	clear();
-
-	header();
-	code();
-	info();
-	size();
-	avail();
-	cost();
-	kind();
-	sale();
-	count();
-	total();
-	profit();
-	greet();
+	log();
 
 	cleanup();
 	pause();
@@ -1039,6 +997,35 @@ void pause ()
 	return;
 }
 #endif
+
+void get (void)
+{
+	head();
+	gcode();
+	ginfo();
+	gsize();
+	gavail();
+	gcost();
+	gkind();
+	gsale();
+	gcount();
+}
+
+void log (void)
+{
+	header();
+	code();
+	info();
+	size();
+	avail();
+	cost();
+	kind();
+	sale();
+	count();
+	total();
+	profit();
+	greet();
+}
 
 /*
 
