@@ -73,39 +73,14 @@ static double _number_ = 0;	// placeholder for real numbers
 static double _count_ = 0;	// shoe count
 static kind_t _kind_ = A;	// shoe kind
 
-// headers:
-void head(void);
-void header(void);
 // getters:
-void gcode(void);
-void ginfo(void);
-void gsize(void);
-void gavail(void);
-void gcost(void);
-void gsale(void);
-void gcount(void);
-void gkind(void);
+void get(void);
 Item *gitem(void);
 // loggers:
-void code(void);
-void info(void);
-void size(void);
-void avail(void);
-void cost(void);
-void sale(void);
-void count(void);
-void kind(void);
-void total(void);
-void profit(void);
-void greet(void);
+void log(void);
 // memory handling utilities:
 void init(void);
 void cleanup(void);
-void *Util_Malloc(size_t const sz);
-void *Util_Free(void *p);
-char *Util_CopyString(char *string);
-double *Util_CopyNumber(double *num);
-void Util_Clear(void);
 // console manipulators:
 void clear(void);
 void pause(void);
@@ -114,35 +89,11 @@ void pause(void);
 int main ()
 {
 	init();
-	head();
-
-	gcode();
-	ginfo();
-	gsize();
-	gavail();
-	gcost();
-	gkind();
-	gsale();
-	gcount();
-
+	get();
 	clear();
-
-	header();
-	code();
-	info();
-	size();
-	avail();
-	cost();
-	kind();
-	sale();
-	count();
-	total();
-	profit();
-	greet();
-
+	log();
 	Item *item = gitem();
 	item->log();
-
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -151,32 +102,9 @@ int main ()
 int main ()
 {
 	init();
-	head();
-
-	gcode();
-	ginfo();
-	gsize();
-	gavail();
-	gcost();
-	gkind();
-	gsale();
-	gcount();
-
+	get();
 	clear();
-
-	header();
-	code();
-	info();
-	size();
-	avail();
-	cost();
-	kind();
-	sale();
-	count();
-	total();
-	profit();
-	greet();
-
+	log();
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -1039,6 +967,35 @@ void pause ()
 	return;
 }
 #endif
+
+void get (void)
+{
+	head();
+	gcode();
+	ginfo();
+	gsize();
+	gavail();
+	gcost();
+	gkind();
+	gsale();
+	gcount();
+}
+
+void log (void)
+{
+	header();
+	code();
+	info();
+	size();
+	avail();
+	cost();
+	kind();
+	sale();
+	count();
+	total();
+	profit();
+	greet();
+}
 
 /*
 
