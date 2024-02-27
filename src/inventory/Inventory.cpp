@@ -250,23 +250,19 @@ static void default_callback (bool *invalid)
 	return;
 }
 
-/*
 static void callback (bool *invalid)
 {
 	if (*invalid) {
 		return;
 	}
 
-	double sale = _number_ ;
-	double cost = _cost_ ;
-	if (sale <= cost) {
-		printf("The sale value must be greater than the cost\n");
+	if (_number_ <= 0) {
+		printf("The cost value must be greater than zero\n");
 		*invalid = true;
 	}
 
 	return;
 }
-*/
 
 static void callback_cnt (bool *invalid)
 {
@@ -743,7 +739,7 @@ void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
 	char msg[] = "Please input a valid shoe cost value";
-	validData("gcost", prompt, default_callback, msg);
+	validData("gcost", prompt, callback, msg);
 	_cost_ = _number_ ;
 }
 
