@@ -787,6 +787,17 @@ void gprofit (void)
 	}
 }
 
+void uprofit (void)
+{
+	if (_kind_ == A) {
+		_profit_ = 0.50;
+	} else if (_kind_ == B) {
+		_profit_ = 0.40;
+	} else {
+		_profit_ = 0.30;
+	}
+}
+
 void gsale (void)
 {
 	double const cost = _cost_ ;
