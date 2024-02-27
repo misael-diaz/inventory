@@ -95,11 +95,7 @@ int main ()
 	init();
 	get();
 	clear();
-	Item *item = gitem();
-	item->log();
-	item->total();
-	item->profit();
-	greet();
+	log();
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -110,7 +106,11 @@ int main ()
 	init();
 	get();
 	clear();
-	log();
+	Item *item = gitem();
+	item->log();
+	item->total();
+	item->profit();
+	greet();
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -499,6 +499,7 @@ Item::Item (char *code,
 
 void Item::log () const
 {
+	printf("SHOE SALES INVENTORY PROGRAM\n\n");
 	printf("REFERENCE: %s\n", this->code);
 	printf("DESCRIPTION: %s\n", this->info);
 	printf("SIZE: %.1f\n", *this->size);
