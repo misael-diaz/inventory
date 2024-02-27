@@ -57,9 +57,9 @@ struct Item
 	void operator delete(void *p);
 };
 
-static m_chain_t m_chain;
-static size_t m_size = 0;
-static size_t m_count = 0;
+static m_chain_t _m_chain_ ;
+static size_t _m_size_ = 0;
+static size_t _m_count_ = 0;
 
 static size_t _sz_ = 0;		// size of temporary placeholder
 static char *_temp_[] = {NULL};	// temporary placeholder for fetching the entire line
@@ -113,14 +113,14 @@ int main ()
 
 static m_chain_t *Util_Chain (m_chain_t *node)
 {
-	m_chain_t *next = (m_chain.next)? m_chain.next : NULL;
+	m_chain_t *next = (_m_chain_.next)? _m_chain_.next : NULL;
 	if (next) {
 		next->prev = node;
 	}
 
 	node->next = next;
-	node->prev = &m_chain;
-	m_chain.next = node;
+	node->prev = &_m_chain_ ;
+	_m_chain_.next = node;
 	return node;
 }
 
@@ -354,8 +354,8 @@ void *Util_Free (void *p)
 	size_t const size = node->size;
 	node = Util_Remove(node);
 
-	m_size -= size;
-	--m_count;
+	_m_size_ -= size;
+	--_m_count_ ;
 
 	return NULL;
 }
@@ -363,14 +363,14 @@ void *Util_Free (void *p)
 void Util_Clear (void)
 {
 	m_chain_t *next = NULL;
-	for (m_chain_t *node = m_chain.next; node; node = next) {
+	for (m_chain_t *node = _m_chain_.next; node; node = next) {
 		next = node->next;
 		void *data = node->data;
 		node = (m_chain_t*) Util_Free(data);
 	}
 
-	m_size = 0;
-	m_count = 0;
+	_m_size_ = 0;
+	_m_count_ = 0;
 }
 
 void *Util_Malloc (size_t const sz)
@@ -390,8 +390,8 @@ void *Util_Malloc (size_t const sz)
 	node->hash = HASH;
 	node->size = size;
 
-	m_size += size;
-	++m_count;
+	_m_size_ += size;
+	++_m_count_ ;
 
 	return data;
 }
