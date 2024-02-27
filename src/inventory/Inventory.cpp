@@ -1008,6 +1008,7 @@ void pause ()
 }
 #endif
 
+#if defined(SWITCH) && SWITCH
 void get (void)
 {
 	head();
@@ -1021,6 +1022,21 @@ void get (void)
 	gsale();
 	gcount();
 }
+#else
+void get (void)
+{
+	head();
+	gcode();
+	ginfo();
+	gsize();
+	gavail();
+	gcost();
+	gkind();
+	uprofit();
+	gsale();
+	gcount();
+}
+#endif
 
 void log (void)
 {
