@@ -53,6 +53,8 @@ struct Item
 	     double *count,
 	     Kind *kind);
 	void log() const;
+	void total() const;
+	void profit() const;
 	void *operator new(size_t size);
 	void operator delete(void *p);
 };
@@ -79,6 +81,7 @@ void get(void);
 Item *gitem(void);
 // loggers:
 void log(void);
+void greet(void);
 // memory handling utilities:
 void init(void);
 void cleanup(void);
@@ -93,8 +96,6 @@ int main ()
 	get();
 	clear();
 	log();
-	Item *item = gitem();
-	item->log();
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -105,7 +106,11 @@ int main ()
 	init();
 	get();
 	clear();
-	log();
+	Item *item = gitem();
+	item->log();
+	item->total();
+	item->profit();
+	greet();
 	cleanup();
 	pause();
 	return EXIT_SUCCESS;
@@ -494,6 +499,7 @@ Item::Item (char *code,
 
 void Item::log () const
 {
+	printf("SHOE SALES INVENTORY PROGRAM\n\n");
 	printf("REFERENCE: %s\n", this->code);
 	printf("DESCRIPTION: %s\n", this->info);
 	printf("SIZE: %.1f\n", *this->size);
@@ -502,6 +508,30 @@ void Item::log () const
 	printf("SALE: %.2f\n", *this->sale);
 	printf("COUNT: %.0f\n", *this->count);
 	printf("KIND: %s\n", this->kind->stringify(this->kind));
+}
+
+void Item::total () const
+{
+	double const cost = *this->cost;
+	double const sale = *this->sale;
+	double const units = *this->count;
+	double const total_cost = units * cost;
+	double const total_sale = units * sale;
+	printf("TOTAL COST: %.2f\n", total_cost);
+	printf("TOTAL PROFIT OF %.0f UNITS: %.2f\n", units, total_sale);
+}
+
+void Item::profit () const
+{
+	double const cost = *this->cost;
+	double const sale = *this->sale;
+	double const units = *this->count;
+	double const profit = (sale - cost);
+	double const total_cost = units * cost;
+	double const net_profit = units * (sale - cost);
+	printf("PROFIT PER UNIT: %.2f\n", profit);
+	printf("NET PROFIT: %.2f\n", net_profit);
+	printf("PROFIT PERCENTAGE: %.2f\n", (net_profit / total_cost) * 100);
 }
 
 void *Item::operator new (size_t size)
