@@ -59,6 +59,28 @@ struct Item
 	void operator delete(void *p);
 };
 
+struct Stack
+{
+	void **_stack_ = NULL;
+	void **_begin_ = NULL;
+	void **_avail_ = NULL;
+	void **_limit_ = NULL;
+	size_t _allot_ = 8;
+	size_t _size_ = 0;
+	int init();
+	void *copy() const;
+	size_t bytes () const;
+	int grow();
+	Stack(void);
+	size_t cap() const;
+	size_t numel() const;
+	int add(void *elem);
+	void **begin();
+	void **end();
+	void *operator new(size_t size);
+	void operator delete(void *p);
+};
+
 static m_chain_t _m_chain_ ;
 static size_t _m_size_ = 0;
 static size_t _m_count_ = 0;
@@ -527,6 +549,176 @@ void *Item::operator new (size_t size)
 }
 
 void Item::operator delete (void *p)
+{
+	p = Util_Free(p);
+}
+
+static void stk_err_create ()
+{
+	fprintf(stderr, "Stack::create: error\n");
+}
+
+static void stk_err_init ()
+{
+	fprintf(stderr, "Stack::init: error\n");
+}
+
+static void stk_err_add ()
+{
+	fprintf(stderr, "Stack::add: error\n");
+}
+
+static void stk_err_copy ()
+{
+	fprintf(stderr, "Stack::copy: error\n");
+}
+
+static void stk_err_grow ()
+{
+	fprintf(stderr, "Stack::grow: error\n");
+}
+
+static void **stk_create (size_t const allot)
+{
+	size_t const limit = (allot + 1);
+	size_t const size = limit * sizeof(void*);
+	void *p = Util_Malloc(size);
+	if (!p) {
+		stk_err_create();
+		return NULL;
+	}
+
+	memset(p, 0, size);
+	return ((void**) p);
+}
+
+Stack::Stack (void)
+{
+	return;
+}
+
+size_t Stack::cap () const
+{
+	return (this->_limit_ - this->_begin_);
+}
+
+size_t Stack::numel () const
+{
+	return (this->_avail_ - this->_begin_);
+}
+
+size_t Stack::bytes () const
+{
+	return this->_size_;
+}
+
+void **Stack::begin ()
+{
+	return this->_begin_;
+}
+
+void **Stack::end ()
+{
+	return this->_avail_;
+}
+
+void *Stack::copy () const
+{
+	size_t const numel = this->numel();
+	size_t const size = numel * sizeof(void*);
+	void *dst = Util_Malloc(size);
+	if (!dst) {
+		stk_err_copy();
+		return NULL;
+	}
+
+	const void *src = ((const void*) this->_stack_);
+	memcpy(dst, src, size);
+	return dst;
+}
+
+int Stack::grow ()
+{
+	int rc = 0;
+	void **stack = NULL;
+	size_t const numel = this->numel();
+	size_t const size = numel * sizeof(void*);
+	size_t const allot = 2 * numel;
+	void *data = this->copy();
+	if (!data) {
+		goto err;
+	}
+
+	stack = stk_create(allot);
+	if (!stack) {
+		goto err;
+	}
+
+	memcpy(stack, data, size);
+	data = Util_Free(data);
+
+	this->_stack_ = stack;
+	this->_begin_ = stack;
+	this->_avail_ = stack + numel;
+	this->_limit_ = stack + allot;
+	this->_allot_ = allot;
+	return rc;
+
+err:
+	rc = -1;
+	stk_err_grow();
+	return rc;
+}
+
+int Stack::init ()
+{
+	int rc = 0;
+	this->_stack_ = stk_create(this->_allot_);
+	if (!this->_stack_) {
+		rc = -1;
+		stk_err_init();
+		return rc;
+	}
+
+	this->_begin_ = this->_stack_;
+	this->_avail_ = this->_stack_;
+	this->_limit_ = this->_stack_ + this->_allot_;
+	return rc;
+}
+
+int Stack::add (void *elem)
+{
+	int rc = 0;
+	if (!this->_stack_) {
+		rc = this->init();
+		if (rc != 0) {
+			goto err;
+		}
+	}
+
+	if (this->_avail_ == this->_limit_) {
+		rc = this->grow();
+		if (rc != 0) {
+			goto err;
+		}
+	}
+
+	*this->_avail_ = elem;
+	++this->_avail_;
+	this->_size_ += sizeof(void*);
+	return rc;
+
+err:
+	stk_err_add();
+	return rc;
+}
+
+void *Stack::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Stack::operator delete (void *p)
 {
 	p = Util_Free(p);
 }
