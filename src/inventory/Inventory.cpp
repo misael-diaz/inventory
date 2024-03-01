@@ -113,6 +113,8 @@ void cleanup(void);
 // console manipulators:
 void clear(void);
 void pause(void);
+// post-processing:
+void aggregate(Stack *stack);
 
 int main ()
 {
@@ -133,6 +135,7 @@ int main ()
 		stack->add(item);
 		gnew();
 	} while (_new_);
+	aggregate(stack);
 	greet();
 	cleanup();
 	pause();
@@ -1235,6 +1238,20 @@ void profit (void)
 	printf("PROFIT PER UNIT: %.2f\n", profit);
 	printf("NET PROFIT: %.2f\n", net_profit);
 	printf("PROFIT PERCENTAGE: %.2f\n", (net_profit / total_cost) * 100);
+}
+
+void aggregate (Stack *stack)
+{
+	double profit = 0;
+	for (void **it = stack->begin(); it != stack->end(); ++it) {
+		Item *item = (Item*) *it;
+		double const units = *item->count;
+		double const sale = *item->sale;
+		double const cost = *item->cost;
+		profit += units * (sale - cost);
+	}
+
+	printf("AGGREGATE PROFIT: %.2f\n", profit);
 }
 
 void greet (void)
