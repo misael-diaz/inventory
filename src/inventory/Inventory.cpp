@@ -1255,6 +1255,7 @@ void aggregate (Stack *stack)
 
 	printf("AGGREGATE PROFIT: %.2f\n", profit);
 	printf("AGGREGATE COST: %.2f\n", expenses);
+	printf("PROFIT PERCENTAGE: %.2f\n", (profit / expenses) * 100);
 }
 
 void greet (void)
