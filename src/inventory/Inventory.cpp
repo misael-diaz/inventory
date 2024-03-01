@@ -123,6 +123,7 @@ int main ()
 	Stack *stack = new Stack();
 	if (!stack) {
 		fprintf(stderr, "main: error\n");
+		cleanup();
 		exit(EXIT_FAILURE);
 	}
 
