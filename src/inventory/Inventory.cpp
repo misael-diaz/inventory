@@ -1243,15 +1243,18 @@ void profit (void)
 void aggregate (Stack *stack)
 {
 	double profit = 0;
+	double expenses = 0;
 	for (void **it = stack->begin(); it != stack->end(); ++it) {
 		Item *item = (Item*) *it;
 		double const units = *item->count;
 		double const sale = *item->sale;
 		double const cost = *item->cost;
 		profit += units * (sale - cost);
+		expenses += units * cost;
 	}
 
 	printf("AGGREGATE PROFIT: %.2f\n", profit);
+	printf("AGGREGATE COST: %.2f\n", expenses);
 }
 
 void greet (void)
