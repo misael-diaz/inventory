@@ -59,6 +59,28 @@ struct Item
 	void operator delete(void *p);
 };
 
+struct Stack
+{
+	void **_stack_ = NULL;
+	void **_begin_ = NULL;
+	void **_avail_ = NULL;
+	void **_limit_ = NULL;
+	size_t _allot_ = 8;
+	size_t _size_ = 0;
+	int init();
+	void *copy() const;
+	size_t bytes () const;
+	int grow();
+	Stack(void);
+	size_t cap() const;
+	size_t numel() const;
+	int add(void *elem);
+	void **begin();
+	void **end();
+	void *operator new(size_t size);
+	void operator delete(void *p);
+};
+
 static m_chain_t _m_chain_ ;
 static size_t _m_size_ = 0;
 static size_t _m_count_ = 0;
@@ -75,9 +97,12 @@ static double _sale_ = 0;	// shoe sale value
 static double _number_ = 0;	// placeholder for real numbers
 static double _count_ = 0;	// shoe count
 static kind_t _kind_ = A;	// shoe kind
+static bool _new_ = false;	// true/false (no) new shoe
 
+void head(void);
 // getters:
 void get(void);
+void gnew(void);
 Item *gitem(void);
 // loggers:
 void log(void);
@@ -88,16 +113,29 @@ void cleanup(void);
 // console manipulators:
 void clear(void);
 void pause(void);
+// post-processing:
+void aggregate(Stack *stack);
 
 int main ()
 {
+	head();
 	init();
-	get();
-	clear();
-	Item *item = gitem();
-	item->log();
-	item->total();
-	item->profit();
+	Stack *stack = new Stack();
+	if (!stack) {
+		fprintf(stderr, "main: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	do {
+		get();
+		Item *item = gitem();
+		item->log();
+		item->total();
+		item->profit();
+		stack->add(item);
+		gnew();
+	} while (_new_);
+	aggregate(stack);
 	greet();
 	cleanup();
 	pause();
@@ -486,7 +524,6 @@ Item::Item (char *code,
 
 void Item::log () const
 {
-	printf("SHOE SALES INVENTORY PROGRAM\n\n");
 	printf("REFERENCE: %s\n", this->code);
 	printf("DESCRIPTION: %s\n", this->info);
 	printf("SIZE: %.1f\n", *this->size);
@@ -527,6 +564,176 @@ void *Item::operator new (size_t size)
 }
 
 void Item::operator delete (void *p)
+{
+	p = Util_Free(p);
+}
+
+static void stk_err_create ()
+{
+	fprintf(stderr, "Stack::create: error\n");
+}
+
+static void stk_err_init ()
+{
+	fprintf(stderr, "Stack::init: error\n");
+}
+
+static void stk_err_add ()
+{
+	fprintf(stderr, "Stack::add: error\n");
+}
+
+static void stk_err_copy ()
+{
+	fprintf(stderr, "Stack::copy: error\n");
+}
+
+static void stk_err_grow ()
+{
+	fprintf(stderr, "Stack::grow: error\n");
+}
+
+static void **stk_create (size_t const allot)
+{
+	size_t const limit = (allot + 1);
+	size_t const size = limit * sizeof(void*);
+	void *p = Util_Malloc(size);
+	if (!p) {
+		stk_err_create();
+		return NULL;
+	}
+
+	memset(p, 0, size);
+	return ((void**) p);
+}
+
+Stack::Stack (void)
+{
+	return;
+}
+
+size_t Stack::cap () const
+{
+	return (this->_limit_ - this->_begin_);
+}
+
+size_t Stack::numel () const
+{
+	return (this->_avail_ - this->_begin_);
+}
+
+size_t Stack::bytes () const
+{
+	return this->_size_;
+}
+
+void **Stack::begin ()
+{
+	return this->_begin_;
+}
+
+void **Stack::end ()
+{
+	return this->_avail_;
+}
+
+void *Stack::copy () const
+{
+	size_t const numel = this->numel();
+	size_t const size = numel * sizeof(void*);
+	void *dst = Util_Malloc(size);
+	if (!dst) {
+		stk_err_copy();
+		return NULL;
+	}
+
+	const void *src = ((const void*) this->_stack_);
+	memcpy(dst, src, size);
+	return dst;
+}
+
+int Stack::grow ()
+{
+	int rc = 0;
+	void **stack = NULL;
+	size_t const numel = this->numel();
+	size_t const size = numel * sizeof(void*);
+	size_t const allot = 2 * numel;
+	void *data = this->copy();
+	if (!data) {
+		goto err;
+	}
+
+	stack = stk_create(allot);
+	if (!stack) {
+		goto err;
+	}
+
+	memcpy(stack, data, size);
+	data = Util_Free(data);
+
+	this->_stack_ = stack;
+	this->_begin_ = stack;
+	this->_avail_ = stack + numel;
+	this->_limit_ = stack + allot;
+	this->_allot_ = allot;
+	return rc;
+
+err:
+	rc = -1;
+	stk_err_grow();
+	return rc;
+}
+
+int Stack::init ()
+{
+	int rc = 0;
+	this->_stack_ = stk_create(this->_allot_);
+	if (!this->_stack_) {
+		rc = -1;
+		stk_err_init();
+		return rc;
+	}
+
+	this->_begin_ = this->_stack_;
+	this->_avail_ = this->_stack_;
+	this->_limit_ = this->_stack_ + this->_allot_;
+	return rc;
+}
+
+int Stack::add (void *elem)
+{
+	int rc = 0;
+	if (!this->_stack_) {
+		rc = this->init();
+		if (rc != 0) {
+			goto err;
+		}
+	}
+
+	if (this->_avail_ == this->_limit_) {
+		rc = this->grow();
+		if (rc != 0) {
+			goto err;
+		}
+	}
+
+	*this->_avail_ = elem;
+	++this->_avail_;
+	this->_size_ += sizeof(void*);
+	return rc;
+
+err:
+	stk_err_add();
+	return rc;
+}
+
+void *Stack::operator new (size_t size)
+{
+	return Util_Malloc(size);
+}
+
+void Stack::operator delete (void *p)
 {
 	p = Util_Free(p);
 }
@@ -752,6 +959,75 @@ void gavail (void)
 	}
 }
 
+void gnew (void)
+{
+	char *text = NULL;
+	ssize_t chars = 0;
+	bool invalid = true;
+	memset(*_temp_, 0, _sz_);
+	char prompt[] = "Input N/Y if there is (no) other new shoe to add:";
+	printf("\n");
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		chars = getline(_temp_, &_sz_, stdin);
+		if (chars == -1) {
+
+			if (errno) {
+				fprintf(stderr, "gnew: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+
+			clearerr(stdin);
+			printf("\nPlease input N/Y\n");
+			printf("%s", prompt);
+
+		} else if (chars > MAX_STRING_LEN) {
+
+			invalid = true;
+			char msg[] = "The input exceeds the max number of chars %d\n";
+			printf(msg, MAX_STRING_LEN);
+			printf("Please input just N/Y\n");
+			*_temp_ = (char*) realloc(*_temp_, MAX_BUFFER_SIZE);
+			if (!*_temp_) {
+				fprintf(stderr, "gnew: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			memset(*_temp_, 0, MAX_BUFFER_SIZE);
+			_sz_ = MAX_BUFFER_SIZE;
+			printf("%s", prompt);
+
+		} else {
+
+			text = *_temp_ ;
+			skipWhiteSpace(&text);
+			char const c = *text ;
+			if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
+				invalid = false;
+			} else {
+				invalid = true;
+			}
+
+			if (invalid) {
+				printf("Please input N/Y\n");
+				printf("%s", prompt);
+			}
+		}
+
+	} while (chars == -1 || invalid);
+
+	char const c = *text;
+	if (c == 'y' || c == 'Y') {
+		_new_ = true;
+	} else {
+		_new_ = false;
+	}
+
+	printf("\n");
+}
+
 void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
@@ -964,6 +1240,24 @@ void profit (void)
 	printf("PROFIT PERCENTAGE: %.2f\n", (net_profit / total_cost) * 100);
 }
 
+void aggregate (Stack *stack)
+{
+	double profit = 0;
+	double expenses = 0;
+	for (void **it = stack->begin(); it != stack->end(); ++it) {
+		Item *item = (Item*) *it;
+		double const units = *item->count;
+		double const sale = *item->sale;
+		double const cost = *item->cost;
+		profit += units * (sale - cost);
+		expenses += units * cost;
+	}
+
+	printf("AGGREGATE PROFIT: %.2f\n", profit);
+	printf("AGGREGATE COST: %.2f\n", expenses);
+	printf("PROFIT PERCENTAGE: %.2f\n", (profit / expenses) * 100);
+}
+
 void greet (void)
 {
 	printf("\nThank you for providing the information\n");
@@ -1011,7 +1305,6 @@ void pause ()
 #if defined(SWITCH) && SWITCH
 void get (void)
 {
-	head();
 	gcode();
 	ginfo();
 	gsize();
@@ -1025,7 +1318,6 @@ void get (void)
 #else
 void get (void)
 {
-	head();
 	gcode();
 	ginfo();
 	gsize();
