@@ -97,9 +97,12 @@ static double _sale_ = 0;	// shoe sale value
 static double _number_ = 0;	// placeholder for real numbers
 static double _count_ = 0;	// shoe count
 static kind_t _kind_ = A;	// shoe kind
+static bool _new_ = false;	// true/false (no) new shoe
 
+void head(void);
 // getters:
 void get(void);
+void gnew(void);
 Item *gitem(void);
 // loggers:
 void log(void);
@@ -113,13 +116,23 @@ void pause(void);
 
 int main ()
 {
+	head();
 	init();
-	get();
-	clear();
-	Item *item = gitem();
-	item->log();
-	item->total();
-	item->profit();
+	Stack *stack = new Stack();
+	if (!stack) {
+		fprintf(stderr, "main: error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	do {
+		get();
+		Item *item = gitem();
+		item->log();
+		item->total();
+		item->profit();
+		stack->add(item);
+		gnew();
+	} while (_new_);
 	greet();
 	cleanup();
 	pause();
@@ -508,7 +521,6 @@ Item::Item (char *code,
 
 void Item::log () const
 {
-	printf("SHOE SALES INVENTORY PROGRAM\n\n");
 	printf("REFERENCE: %s\n", this->code);
 	printf("DESCRIPTION: %s\n", this->info);
 	printf("SIZE: %.1f\n", *this->size);
@@ -944,6 +956,75 @@ void gavail (void)
 	}
 }
 
+void gnew (void)
+{
+	char *text = NULL;
+	ssize_t chars = 0;
+	bool invalid = true;
+	memset(*_temp_, 0, _sz_);
+	char prompt[] = "Input N/Y if there is (no) other new shoe to add:";
+	printf("\n");
+	printf("%s", prompt);
+	do {
+		errno = 0;
+		chars = getline(_temp_, &_sz_, stdin);
+		if (chars == -1) {
+
+			if (errno) {
+				fprintf(stderr, "gnew: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+
+			clearerr(stdin);
+			printf("\nPlease input N/Y\n");
+			printf("%s", prompt);
+
+		} else if (chars > MAX_STRING_LEN) {
+
+			invalid = true;
+			char msg[] = "The input exceeds the max number of chars %d\n";
+			printf(msg, MAX_STRING_LEN);
+			printf("Please input just N/Y\n");
+			*_temp_ = (char*) realloc(*_temp_, MAX_BUFFER_SIZE);
+			if (!*_temp_) {
+				fprintf(stderr, "gnew: %s\n", strerror(errno));
+				cleanup();
+				exit(EXIT_FAILURE);
+			}
+			memset(*_temp_, 0, MAX_BUFFER_SIZE);
+			_sz_ = MAX_BUFFER_SIZE;
+			printf("%s", prompt);
+
+		} else {
+
+			text = *_temp_ ;
+			skipWhiteSpace(&text);
+			char const c = *text ;
+			if (c == 'y' || c == 'Y' || c == 'n' || c == 'N'){
+				invalid = false;
+			} else {
+				invalid = true;
+			}
+
+			if (invalid) {
+				printf("Please input N/Y\n");
+				printf("%s", prompt);
+			}
+		}
+
+	} while (chars == -1 || invalid);
+
+	char const c = *text;
+	if (c == 'y' || c == 'Y') {
+		_new_ = true;
+	} else {
+		_new_ = false;
+	}
+
+	printf("\n");
+}
+
 void gcost (void)
 {
 	char prompt[] = "Input the shoe cost:";
@@ -1203,7 +1284,6 @@ void pause ()
 #if defined(SWITCH) && SWITCH
 void get (void)
 {
-	head();
 	gcode();
 	ginfo();
 	gsize();
@@ -1217,7 +1297,6 @@ void get (void)
 #else
 void get (void)
 {
-	head();
 	gcode();
 	ginfo();
 	gsize();
